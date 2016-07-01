@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="source">
+      <UniqueIdentifier>{e0faaf5c-b286-4a9a-a870-39e035804d49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{3d8a5891-8b1b-4b6a-9c51-abae21c3c771}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ESQL">
+      <UniqueIdentifier>{662ea553-2384-4ef8-bea6-68d3f441a06b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\ENetwork">
+      <UniqueIdentifier>{b26a2614-6a34-41df-ad8a-425e19687a7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\ENetwork">
+      <UniqueIdentifier>{053a7187-36f5-4646-a0fc-4b3827b9129a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\ESQL">
+      <UniqueIdentifier>{99880243-9def-44a9-9ca1-14795e2a47b9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\ENetwork\EServer.h">
+      <Filter>include\ENetwork</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ENetwork\ESocket.h">
+      <Filter>include\ENetwork</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ESQL\ESQL.h">
+      <Filter>include\ESQL</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ESQL\ESQLField.h">
+      <Filter>include\ESQL</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ESQL\ESQLResult.h">
+      <Filter>include\ESQL</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ESQL\ESQLRow.h">
+      <Filter>include\ESQL</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ScaledTypes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\ENetwork\EServer.cpp">
+      <Filter>source\ENetwork</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ENetwork\ESocket.cpp">
+      <Filter>source\ENetwork</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ESQL\ESQL.cpp">
+      <Filter>source\ESQL</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ESQL\ESQLField.cpp">
+      <Filter>source\ESQL</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ESQL\ESQLResult.cpp">
+      <Filter>source\ESQL</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ESQL\ESQLRow.cpp">
+      <Filter>source\ESQL</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
