@@ -87,20 +87,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\ELib\include;C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-win32\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-win32\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\ELib\include;C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\ELib\include;C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-win32\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-win32\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\ELib\include;C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\ELib\include;C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-win32\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-win32\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\ELib\include;C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\ELib\include;C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-win32\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-win32\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\ELib\include;C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -115,8 +115,8 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <Lib>
-      <AdditionalDependencies>libmysql.lib%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libmysql.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
@@ -135,8 +135,8 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <Lib>
-      <AdditionalDependencies>libmysql.lib%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libmysql.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
@@ -159,8 +159,8 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>libmysql.lib%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libmysql.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
@@ -183,8 +183,8 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>libmysql.lib%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libmysql.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
