@@ -80,7 +80,7 @@ namespace   ELib
     return (static_cast<uint8>(strtoul(m_data, nullptr, 10)) != 0);
   }
   
-  void	     ESQLField::print() const
+  void	    ESQLField::print() const
   {
     std::cout << std::left << std::setw(20) << m_data;
   }

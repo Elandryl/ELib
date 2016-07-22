@@ -1,18 +1,18 @@
 #include "ENetwork/EServer.h"
 #include <iostream>
 
-namespace	ELib
+namespace	    ELib
 {
-  EServer	*gServer = NULL;
+  EServer	    *gServer = nullptr;
   /* Functors */
   
-  DWORD WINAPI	AcceptFunctor(LPVOID lpParam)
+  DWORD WINAPI	    AcceptFunctor(LPVOID lpParam)
   {
     static_cast<EServer*>(lpParam)->accept();
     return (0);
   }
   
-  DWORD WINAPI	SelectFunctor(LPVOID lpParam)
+  DWORD WINAPI	    SelectFunctor(LPVOID lpParam)
   {
     static_cast<EServer::Selector*>(lpParam)->select();
     return (0);
@@ -20,65 +20,93 @@ namespace	ELib
   
   /* Server */
   
-  EServer::EServer()
+  EServer::EServer() :
+    m_isRunning(false),
+    m_packetGenerator(nullptr)
   {
-    WSADATA	WSAData;
+    WSADATA	    WSAData;
     
     if (WSAStartup(MAKEWORD(2, 2), &WSAData))
-    {
-      perror("error WSAStartup()");
-      exit(EXIT_FAILURE);
-    }
+      EThrowIfFailed(EERROR_WSA_STARTUP);
     gServer = this;
   }
   
   EServer::~EServer()
   {
     m_socketServer.close();
-    while (!m_selectors.empty())
+    for (std::vector<Selector*>::iterator it = m_selectors.begin(); it != m_selectors.end(); ++it)
+      delete(*it);
+    while (!m_packets.empty())
     {
-      delete(m_selectors.back());
-      m_selectors.pop_back();
+      delete(m_packets.front());
+      m_packets.pop();
     }
     WSACleanup();
   }
 
-  bool		EServer::launch(const char *hostname, uint16 port)
+  void		    EServer::definePacketGenerator(EPacketGenerator *packetGenerator)
+  {
+    m_packetGenerator = packetGenerator;
+  }
+
+  EErrorCode	    EServer::connect(const char *hostname, uint16 port)
   {
     m_socketServer.bind(hostname, port);
     m_socketServer.listen();
-    m_isRunning = true;
-    m_threadAccept = CreateThread(NULL, 0, AcceptFunctor, this, 0, NULL);
     std::cout << "Server launched : " << hostname << ":" << port << std::endl;
-    return (true);
+    return (EERROR_NONE);
   }
 
-  bool		EServer::accept()
+  EErrorCode	    EServer::run()
   {
-    ESocket	*client;
-    
-    while (m_isRunning)
-      if (!(client = m_socketServer.accept())	|| !addSocket(client))
-      {
-	perror("error Accept()");
-	exit(EXIT_FAILURE);
-      }
-    return (true);
+    if (!m_packetGenerator)
+      EReturn(EERROR_PACKET_GENERATOR);
+    m_isRunning = true;
+    m_threadAccept = CreateThread(nullptr, 0, AcceptFunctor, this, 0, nullptr);
+    for (std::vector<Selector*>::iterator it = m_selectors.begin(); it != m_selectors.end(); ++it)
+      (*it)->launch();
+    return (EERROR_NONE);
+  }
+
+  void		    EServer::stop()
+  {
+    m_isRunning = false;
+    //m_socketServer.shutdown();
+    TerminateThread(m_threadAccept, 0);
+    for (std::vector<Selector*>::iterator it = m_selectors.begin(); it != m_selectors.end(); ++it)
+      (*it)->stop();
   }
   
-  bool		EServer::broadcast(char *data, uint32 length, uint8 flags)
+  EErrorCode	    EServer::accept()
   {
+    ESocket	    *client;
+    
+    while (m_isRunning)
+    {
+      if (!(client = m_socketServer.accept()))
+	return (EERROR_SOCKET_ACCEPT);
+      if (!addSocket(client))
+	EReturn(EERROR_SERVER_ADD);
+    }
+    return (EERROR_NONE);
+  }
+  
+  EErrorCode	    EServer::broadcast(EPacket *packet, uint8 flags)
+  {
+    bool	    error = false;
+
     for (std::vector<Selector*>::iterator it = m_selectors.begin(); it != m_selectors.end(); ++it)
-      (*it)->broadcast(data, length, flags);
-    return (true);
+      if ((*it)->broadcast(packet, flags) != EERROR_NONE)
+	error = true;
+    return (error ? EERROR_SOCKET_SEND : EERROR_NONE);
   }
 
-  bool		EServer::addSocket(ESocket *client)
+  EErrorCode	    EServer::addSocket(ESocket *client)
   {
-    bool	added = false;
+    bool	    added = false;
     
     for (std::vector<Selector*>::iterator it = m_selectors.begin(); it != m_selectors.end();)
-      if (!(*it)->isRunning())
+      if ((*it)->empty())
       {
 	delete(*it);
 	it = m_selectors.erase(it);
@@ -90,46 +118,42 @@ namespace	ELib
 	++it;
       }
     if (!added)
+    {
       m_selectors.push_back(new Selector(client));
-    return (true);
+      if (m_selectors.back()->launch() != EERROR_NONE)
+	return (EERROR_SELECTOR_LAUNCH);
+    }
+    return (EERROR_NONE);
   }
-  
-  bool		EServer::recv(ESocket *client)
-  {
-    int32	ret;
-    char	*test = new char[18];
 
-    ret = client->recv(test, 18);
+  EErrorCode	    EServer::recvPacket(ESocket *client)
+  {
+    int32	    ret;
+    uint16	    opcode = 0;
+
+    ret = client->recv(reinterpret_cast<char*>(&opcode), sizeof(uint16));
     if (ret > 0)
     {
-      std::cout << "RECV PACKET " << ret << std::endl;
-      EPacket	*packet = new EPacket();
+      EPacket	    *packet;
 
-      packet->size = ret;
-      packet->data = test;
+      if (!(packet = m_packetGenerator->generatePacket(opcode)) || packet->recv(client) != EERROR_NONE)
+	EReturn(EERROR_INVALID_PACKET);
       m_packets.push(packet);
     }
-    else
-    {
-      if (ret == 0)
-	perror("disconnected");
-      else
-	std::cout << ret << " error " << WSAGetLastError() << std::endl;
-      delete(client);
-      delete(test);
-    }
-    return (true);
+    if (ret < 0)
+      EReturn(EERROR_CLIENT_RECEIVE);
+    return (EERROR_NONE);
   }
-  
-  bool		EServer::getPacket(char *data, uint32 size)
+
+  EPacket	    *EServer::getPacket()
   {
+    EPacket	    *packet;
+
     if (m_packets.empty())
-      return (false);
-    memcpy(data, m_packets.front()->data, m_packets.front()->size);
-    delete(m_packets.front()->data);
-    delete(m_packets.front());
+      return (nullptr);
+    packet = m_packets.front();
     m_packets.pop();
-    return (true);
+    return (packet);
   }
 
   /* Selector */
@@ -137,60 +161,84 @@ namespace	ELib
   EServer::Selector::Selector(ESocket *socket) :
     m_socketsClients{socket},
     m_maxFd(static_cast<uint32>(socket->getSocket()) + 1),
-    m_running(true)
+    m_isRunning(false)
   {
-    m_socketControll.socket();
-    if (m_socketControll.getSocket() >= m_maxFd)
-      m_maxFd = static_cast<uint32>(m_socketControll.getSocket()) + 1;
-    m_threadSelect = CreateThread(NULL, 0, SelectFunctor, this, 0, NULL);
   }
   
   EServer::Selector::~Selector()
   {
     m_socketControll.close();
-    for (std::vector<ESocket*>::iterator it = m_socketsClients.begin(); it != m_socketsClients.end();)
+    for (std::vector<ESocket*>::iterator it = m_socketsClients.begin(); it != m_socketsClients.end(); ++it)
     {
       (*it)->close();
       delete(*it);
-      it = m_socketsClients.erase(it);
     }
   }
 
-  bool		EServer::Selector::select()
+  EErrorCode	    EServer::Selector::launch()
   {
-    while (m_socketsClients.size())
+    if (m_socketControll.socket() != EERROR_NONE)
+      EReturn(EERROR_SELECTOR_LAUNCH);
+    m_isRunning = true;
+    if (m_socketControll.getSocket() >= m_maxFd)
+      m_maxFd = static_cast<uint32>(m_socketControll.getSocket()) + 1;
+    m_threadSelect = CreateThread(nullptr, 0, SelectFunctor, this, 0, nullptr);
+    return (EERROR_NONE);
+  }
+
+  void		    EServer::Selector::stop()
+  {
+    m_isRunning = false;
+    //m_socketControll.shutdown();
+    TerminateThread(m_threadSelect, 0);
+  }
+
+  EErrorCode	    EServer::Selector::select()
+  {
+    while (m_isRunning)
     {
       FD_ZERO(&m_set);
       FD_SET(m_socketControll.getSocket(), &m_set);
       for (std::vector<ESocket*>::iterator it = m_socketsClients.begin(); it != m_socketsClients.end(); ++it)
-	FD_SET((*it)->getSocket(), &m_set);
-      if (::select(m_maxFd, &m_set, NULL, NULL, NULL) < 0)
-      {
-	std::cout << "error Select" << WSAGetLastError() << std::endl;
-	system("pause");
-	exit(EXIT_FAILURE);
-      }
+    	FD_SET((*it)->getSocket(), &m_set);
+      if (::select(m_maxFd, &m_set, nullptr, nullptr, nullptr) < 0)
+	EReturn(EERROR_SERVER_SELECT);
       if (FD_ISSET(m_socketControll.getSocket(), &m_set))
-	m_socketControll.socket();
-      for (std::vector<ESocket*>::iterator it = m_socketsClients.begin(); it != m_socketsClients.end(); ++it)
-	if (FD_ISSET((*it)->getSocket(), &m_set))
-	  if (!gServer->recv(*it))
-	    it = m_socketsClients.erase(it)--;
+	if (m_socketControll.socket() != EERROR_NONE)
+	  return (EERROR_INVALID_SOCKET);
+      for (std::vector<ESocket*>::iterator it = m_socketsClients.begin(); it != m_socketsClients.end();)
+      {
+	EErrorCode  error;
+
+	if (FD_ISSET((*it)->getSocket(), &m_set) && !(error = gServer->recvPacket(*it)))
+	{
+	  (*it)->close();
+	  delete(*it);
+	  it = m_socketsClients.erase(it);
+	  if (m_socketsClients.empty())
+	    stop();
+	  return (error);
+	}
+	else
+	  ++it;
+      }
     }
-    m_running = false;
-    return (false);
+    return (EERROR_NONE);
   }
   
-  bool		EServer::Selector::broadcast(char *data, uint32 length, uint8 flags)
+  EErrorCode	    EServer::Selector::broadcast(EPacket *packet, uint8 flags)
   {
+    bool	    error = false;
+
     for (std::vector<ESocket*>::iterator it = m_socketsClients.begin(); it != m_socketsClients.end(); ++it)
-      (*it)->send(data, length, flags);
-    return (true);
+      if (packet->send(*it, flags) != EERROR_NONE)
+	error = true;
+    return (error ? EERROR_SOCKET_SEND : EERROR_NONE);
   }
 
-  bool		EServer::Selector::addSocket(ESocket *socket)
+  bool		    EServer::Selector::addSocket(ESocket *socket)
   {
-    if (m_socketsClients.size() >= MAX_SOCKETS_PER_SET)
+    if (m_socketsClients.size() >= MAX_SOCKETS_PER_SET - 1)
       return (false);
     m_socketsClients.push_back(socket);
     if (socket->getSocket() >= m_maxFd)
@@ -199,8 +247,8 @@ namespace	ELib
     return (true);
   }
   
-  bool		EServer::Selector::isRunning() const
+  bool		    EServer::Selector::empty() const
   {
-    return (m_running);
+    return (m_socketsClients.empty());
   }
 }

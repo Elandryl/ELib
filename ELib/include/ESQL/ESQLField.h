@@ -1,7 +1,6 @@
 #pragma once
 
-#include <string>
-#include "ScaledTypes.h"
+#include "Global.h"
 
 namespace   ELib
 {

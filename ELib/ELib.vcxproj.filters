@@ -42,6 +42,18 @@
     <ClInclude Include="include\ScaledTypes.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\ENetwork\EPacket.h">
+      <Filter>include\ENetwork</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ENetwork\EClient.h">
+      <Filter>include\ENetwork</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EException.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Global.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\ENetwork\EServer.cpp">
@@ -61,6 +73,12 @@
     </ClCompile>
     <ClCompile Include="source\ESQL\ESQLRow.cpp">
       <Filter>source\ESQL</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ENetwork\EClient.cpp">
+      <Filter>source\ENetwork</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EException.cpp">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

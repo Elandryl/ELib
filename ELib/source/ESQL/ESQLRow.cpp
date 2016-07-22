@@ -9,6 +9,8 @@ namespace ELib
   
   ESQLRow::~ESQLRow()
   {
+    for (std::vector<ESQLField*>::iterator it = m_fields.begin(); it != m_fields.end(); ++it)
+      delete(*it);
   }
   
   void	      ESQLRow::push(char *data)
@@ -24,7 +26,7 @@ namespace ELib
   ESQLField   *ESQLRow::at(uint32 column)
   {
     if (column >= static_cast<uint32>(m_fields.size()))
-      return (NULL);
+      EReturnValue(EERROR_OUT_OF_FIELD, nullptr);
     return (m_fields[column]);
   }
   

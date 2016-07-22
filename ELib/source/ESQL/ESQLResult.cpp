@@ -32,7 +32,7 @@ namespace	    ELib
   ESQLRow	    *ESQLResult::at(uint32 row)
   {
     if (row >= static_cast<uint32>(m_rows.size()))
-      return (NULL);
+      EReturnValue(EERROR_OUT_OF_FIELD, nullptr);
     return (m_rows.at(row));
   }
   
@@ -80,10 +80,10 @@ namespace	    ELib
     for (std::vector<FieldInfo>::iterator it = m_columnInfos.begin(); it != m_columnInfos.end(); ++it)
       if (strcmp(columnName, (*it).name) == 0)
 	return (ESQLResult::at(row)->at(static_cast<uint32>(it - m_columnInfos.begin())));
-    return (nullptr);
+    EReturnValue(EERROR_OUT_OF_FIELD, nullptr);
   }
   
-  void		    ESQLIndexedResult::rowAsObject(uint32 row, char *objectAddr)
+  void		    ESQLIndexedResult::rowAsPaddedObject(uint32 row, char *objectAddr)
   {
     for (std::vector<FieldInfo>::iterator it = m_columnInfos.begin(); it != m_columnInfos.end(); ++it)
     {
@@ -131,7 +131,7 @@ namespace	    ELib
   void		    ESQLIndexedResult::print() const
   {
     for (std::vector<FieldInfo>::const_iterator it = m_columnInfos.begin(); it != m_columnInfos.end(); ++it)
-      std::cout << std::left << it->name << "-" << std::setw(15) << (it->sign ? '1' : '0');
+      std::cout << std::left << it->name << "-" << std::setw(15) << (it->sign ? "signed" : "unsigned");
     std::cout << std::endl;
     ESQLResult::print();
   }

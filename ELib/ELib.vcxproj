@@ -19,15 +19,21 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\EException.h" />
+    <ClInclude Include="include\ENetwork\EClient.h" />
+    <ClInclude Include="include\ENetwork\EPacket.h" />
     <ClInclude Include="include\ENetwork\EServer.h" />
     <ClInclude Include="include\ENetwork\ESocket.h" />
     <ClInclude Include="include\ESQL\ESQL.h" />
     <ClInclude Include="include\ESQL\ESQLField.h" />
     <ClInclude Include="include\ESQL\ESQLResult.h" />
     <ClInclude Include="include\ESQL\ESQLRow.h" />
+    <ClInclude Include="include\Global.h" />
     <ClInclude Include="include\ScaledTypes.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\EException.cpp" />
+    <ClCompile Include="source\ENetwork\EClient.cpp" />
     <ClCompile Include="source\ENetwork\EServer.cpp" />
     <ClCompile Include="source\ENetwork\ESocket.cpp" />
     <ClCompile Include="source\ESQL\ESQL.cpp" />

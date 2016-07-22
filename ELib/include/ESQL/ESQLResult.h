@@ -28,19 +28,20 @@ namespace		    ELib
   public:
     ESQLIndexedResult(void *sqlres);
     ~ESQLIndexedResult();
-    using ESQLResult::at;
-    virtual ESQLField	    *at(uint32 row, const char *columnName);
-    void		    rowAsObject(uint32 row, char *objectAddr);
-
     template <typename T>
-    bool		    rowAsObject(uint32 row, T *objectAddr)
+    EErrorCode		    rowAsObject(uint32 row, T *objectAddr)
     {
       if (alignof(T) != 1)
-	return (false);
-      rowAsObject(row, reinterpret_cast<char*>(objectAddr));
-      return (true);
+	EReturn(EERROR_WRONG_PADDING);
+      rowAsPaddedObject(row, reinterpret_cast<char*>(objectAddr));
+      return (EERROR_NONE);
     }
-
+    using ESQLResult::at;
+    virtual ESQLField	    *at(uint32 row, const char *columnName);
+    void		    print() const;
+  
+  private:
+    void		    rowAsPaddedObject(uint32 row, char *objectAddr);
     template<typename T>
     void		    assignDataToObject(char *&objectAddr, ESQLField *field)
     {
@@ -48,9 +49,6 @@ namespace		    ELib
       objectAddr += sizeof(T);
     }
 
-    void		    print() const;
-  
-  private:
     struct		    FieldInfo
     {
       char		    *name;
@@ -59,6 +57,5 @@ namespace		    ELib
     };
 
     std::vector<FieldInfo>	m_columnInfos;
-    uint8			pack = 0, count = 0;
   };
 }

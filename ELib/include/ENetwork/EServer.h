@@ -2,9 +2,10 @@
 
 #include <vector>
 #include <queue>
-#include "ENetwork/ESocket.h"
+#include "ESocket.h"
+#include "EPacket.h"
 
-#define MAX_SOCKETS_PER_SET 63
+#define MAX_SOCKETS_PER_SET 64
 
 namespace		      ELib
 {
@@ -19,10 +20,12 @@ namespace		      ELib
     public:
       Selector(ESocket *socket);
       ~Selector();
-      bool		      select();
-      bool		      broadcast(char *data, uint32 length, uint8 flags = 0);
+      EErrorCode	      launch();
+      void		      stop();
+      EErrorCode	      select();
+      EErrorCode	      broadcast(EPacket *packet, uint8 flags = 0);
       bool		      addSocket(ESocket *socket);
-      bool		      isRunning() const;
+      bool		      empty() const;
     
     private:
       fd_set		      m_set;
@@ -30,32 +33,30 @@ namespace		      ELib
       std::vector<ESocket*>   m_socketsClients;
       unsigned int	      m_maxFd;
       HANDLE		      m_threadSelect;
-      bool		      m_running;
+      bool		      m_isRunning;
     };
     
     /* Server */
 
     EServer();
     ~EServer();
-    bool		      launch(const char *hostname, uint16 port);
-    bool		      accept();
-    bool		      broadcast(char *data, uint32 length, uint8 flags = 0);
-    bool		      getPacket(char *data, uint32 size);
+    void		      definePacketGenerator(EPacketGenerator *packetGenerator);
+    EErrorCode		      connect(const char *hostname, uint16 port);
+    EErrorCode		      run();
+    void		      stop();
+    EErrorCode		      accept();
+    EErrorCode		      broadcast(EPacket *packet, uint8 flags = 0);
+    EPacket*		      getPacket();
   
   private:
-    bool		      addSocket(ESocket *client);
-    bool		      recv(ESocket *client);
+    EErrorCode		      addSocket(ESocket *client);
+    EErrorCode		      recvPacket(ESocket *client);
 
     ESocket		      m_socketServer;
     HANDLE		      m_threadAccept;
     std::vector<Selector*>    m_selectors;
     bool		      m_isRunning;
-    
-    struct		      EPacket
-    {
-      uint32		      size;
-      char		      *data;
-    };
+    EPacketGenerator	      *m_packetGenerator;
     std::queue<EPacket*>      m_packets;
   };
 }
