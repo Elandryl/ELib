@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -19,21 +19,26 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\EException.h" />
+    <ClInclude Include="include\EError.h" />
     <ClInclude Include="include\ENetwork\EClient.h" />
     <ClInclude Include="include\ENetwork\EPacket.h" />
+    <ClInclude Include="include\ENetwork\EPacketHandler.h" />
+    <ClInclude Include="include\ENetwork\ESelector.h" />
     <ClInclude Include="include\ENetwork\EServer.h" />
     <ClInclude Include="include\ENetwork\ESocket.h" />
     <ClInclude Include="include\ESQL\ESQL.h" />
     <ClInclude Include="include\ESQL\ESQLField.h" />
     <ClInclude Include="include\ESQL\ESQLResult.h" />
     <ClInclude Include="include\ESQL\ESQLRow.h" />
-    <ClInclude Include="include\Global.h" />
-    <ClInclude Include="include\ScaledTypes.h" />
+    <ClInclude Include="include\EGlobal.h" />
+    <ClInclude Include="include\EScaledTypes.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\EException.cpp" />
+    <ClCompile Include="source\EError.cpp" />
     <ClCompile Include="source\ENetwork\EClient.cpp" />
+    <ClCompile Include="source\ENetwork\EPacket.cpp" />
+    <ClCompile Include="source\ENetwork\EPacketHandler.cpp" />
+    <ClCompile Include="source\ENetwork\ESelector.cpp" />
     <ClCompile Include="source\ENetwork\EServer.cpp" />
     <ClCompile Include="source\ENetwork\ESocket.cpp" />
     <ClCompile Include="source\ESQL\ESQL.cpp" />
@@ -51,26 +56,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -101,8 +106,8 @@
     <LibraryPath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\ELib\include;C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Elandryl\Documents\Visual Studio 2017\Projects\ELib\ELib\include;C:\Users\Elandryl\Documents\Visual Studio 2017\Projects\ELib\mysql-connector-c-6.1.6-winx64\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Elandryl\Documents\Visual Studio 2017\Projects\ELib\mysql-connector-c-6.1.6-winx64\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\ELib\include;C:\Users\Elandryl\Documents\Visual Studio 2015\Projects\ELib\mysql-connector-c-6.1.6-winx64\include;$(IncludePath)</IncludePath>
@@ -135,7 +140,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Elandryl\Documents\Visual Studio 2017\Projects\ELib\ELib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

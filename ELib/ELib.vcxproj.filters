@@ -39,19 +39,25 @@
     <ClInclude Include="include\ESQL\ESQLRow.h">
       <Filter>include\ESQL</Filter>
     </ClInclude>
-    <ClInclude Include="include\ScaledTypes.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\ENetwork\EPacket.h">
       <Filter>include\ENetwork</Filter>
     </ClInclude>
     <ClInclude Include="include\ENetwork\EClient.h">
       <Filter>include\ENetwork</Filter>
     </ClInclude>
-    <ClInclude Include="include\EException.h">
+    <ClInclude Include="include\EGlobal.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Global.h">
+    <ClInclude Include="include\EScaledTypes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ENetwork\EPacketHandler.h">
+      <Filter>include\ENetwork</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ENetwork\ESelector.h">
+      <Filter>include\ENetwork</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EError.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -77,7 +83,16 @@
     <ClCompile Include="source\ENetwork\EClient.cpp">
       <Filter>source\ENetwork</Filter>
     </ClCompile>
-    <ClCompile Include="source\EException.cpp">
+    <ClCompile Include="source\ENetwork\EPacket.cpp">
+      <Filter>source\ENetwork</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ENetwork\EPacketHandler.cpp">
+      <Filter>source\ENetwork</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ENetwork\ESelector.cpp">
+      <Filter>source\ENetwork</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EError.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

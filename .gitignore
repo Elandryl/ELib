@@ -251,3 +251,7 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+# User defined
+*.db
+mysql-connector-c-6.1.6-winx64

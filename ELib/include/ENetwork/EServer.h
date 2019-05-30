@@ -1,62 +1,48 @@
+/**
+  @author Elandryl (Christophe.M).
+  @date 2019.
+  @brief Header for EServer Class.
+*/
+
 #pragma once
 
-#include <vector>
-#include <queue>
-#include "ESocket.h"
-#include "EPacket.h"
+#include "ESelector.h"
 
-#define MAX_SOCKETS_PER_SET 64
-
-namespace		      ELib
+/**
+  @brief General scope for ELib components.
+*/
+namespace                     ELib
 {
-  class			      EServer
+
+  /**
+    @brief EServer automatize the handling of ESockets for receiving EPackets.
+    @details This class call accept for incoming connections in its own thread.
+    @details It will generate new ESelector every MAX_CLIENTS to dispatch the load.
+    @details Every received EPackets are contained in the EPacketHandler in FIFO order.
+  */
+  class                       EServer
   {
   public:
-
-    /* Selector */
-
-    class		      Selector
-    {
-    public:
-      Selector(ESocket *socket);
-      ~Selector();
-      EErrorCode	      launch();
-      void		      stop();
-      EErrorCode	      select();
-      EErrorCode	      broadcast(EPacket *packet, uint8 flags = 0);
-      bool		      addSocket(ESocket *socket);
-      bool		      empty() const;
-    
-    private:
-      fd_set		      m_set;
-      ESocket		      m_socketControll;
-      std::vector<ESocket*>   m_socketsClients;
-      unsigned int	      m_maxFd;
-      HANDLE		      m_threadSelect;
-      bool		      m_isRunning;
-    };
-    
-    /* Server */
-
     EServer();
     ~EServer();
-    void		      definePacketGenerator(EPacketGenerator *packetGenerator);
-    EErrorCode		      connect(const char *hostname, uint16 port);
-    EErrorCode		      run();
-    void		      stop();
-    EErrorCode		      accept();
-    EErrorCode		      broadcast(EPacket *packet, uint8 flags = 0);
-    EPacket*		      getPacket();
-  
-  private:
-    EErrorCode		      addSocket(ESocket *client);
-    EErrorCode		      recvPacket(ESocket *client);
+    void                      init(const std::string &p_hostname, uint16 p_port);
+    void                      start();
+    void                      stop();
+    void                      accept();
+    void                      addClient(ESocket *p_client);
+    void                      broadcast(EPacket *p_packet);
+    void                      clearSelectors();
+    EPacketHandler            &getPacketHandler();
+    bool                      isRunning() const;
+    const std::string         toString() const;
 
-    ESocket		      m_socketServer;
-    HANDLE		      m_threadAccept;
-    std::vector<Selector*>    m_selectors;
-    bool		      m_isRunning;
-    EPacketGenerator	      *m_packetGenerator;
-    std::queue<EPacket*>      m_packets;
+  private:
+    ESocket                   m_socketAccept;   /**< ESocket for accept incoming connection. */
+    std::vector<ESelector*>   m_selectors;      /**< List of ESelector that contains and handles the ESocket clients. */
+    HANDLE                    m_threadAccept;   /**< Handle for accept thread. */
+    HANDLE                    m_mutexSelectors; /**< Semaphore for m_selectors thread safety. */
+    EPacketHandler            m_packetHandler;  /**< EPacketHandler that contains the received EPackets. */
+    bool                      m_isRunning;      /**< Indicate if EServer is running. */
   };
+
 }
