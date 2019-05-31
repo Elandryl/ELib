@@ -244,7 +244,7 @@ namespace                 ELib
   void                    EPacketHandler::setGenerator(EPacketType type, EPacketGenerator generator)
   {
     mEERROR_R();
-    if (EPACKET_TYPE_RESERVED < type)
+    if (EPACKET_TYPE_RESERVED >= type)
     {
       mEERROR_S(EERROR_PACKET_RESERVED);
     }

@@ -8,6 +8,8 @@
 #include <iostream>
 #include <atlstr.h>
 
+ELib::EError          __gELastEError;
+
 /**
   @brief General scope for ELib components.
 */
@@ -75,6 +77,14 @@ namespace             ELib
     "EERROR_",
     "EERROR_"
   };
+
+  /**
+    @brief Empty constructor used for initialing globals.
+    @details This call forces EError.cpp to be call before any EError and allocate its global variable.
+  */
+  EError::EError()
+  {
+  }
 
   /**
     @brief Format AdditionnalInfos from EError for display.

@@ -34,12 +34,12 @@ namespace           ELib
   class             EPacket
   {
   public:
-
     EPacket(EPacketType p_type, ESocket *p_src = nullptr);
     virtual ~EPacket();
     virtual void    recv() = 0;
     virtual void    generate(const char *p_datas, int32 p_len) = 0;
     virtual void    send(ESocket *p_dst = nullptr) = 0;
+    virtual void    send(const char *p_datas, int32 p_len, ESocket *p_dst = nullptr);
     EPacketType     getType() const;
     const ESocket   *getSource() const;
     void            setSource(ESocket *p_src);

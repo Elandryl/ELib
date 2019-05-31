@@ -31,6 +31,65 @@ namespace         ELib
   }
 
   /**
+    @brief Send EPacket informations and datas.
+    @details Automatically handle the target selection and EPacket informations sending.
+  */
+  void            EPacket::send(const char *p_datas, int32 p_len, ESocket *p_dst)
+  {
+    mEERROR_R();
+    if (nullptr == m_src)
+    {
+      mEERROR_S(EERROR_SOCKET_INVALID);
+    }
+
+    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    {
+      char        *l_datas = nullptr;
+      int32       l_len = -1;
+      int32       l_ret = -1;
+
+      l_len = sizeof(EPacketType) + p_len;
+      l_datas = new char[l_len];
+      if (nullptr != l_datas)
+      {
+        memcpy(l_datas, &m_type, sizeof(ELib::EPacketType));
+        memcpy(l_datas + sizeof(ELib::EPacketType), p_datas, p_len);
+        if (nullptr == p_dst)
+        {
+          l_ret = m_src->send(l_datas, l_len);
+        }
+        else
+        {
+          if (ESOCKET_FLAGS_PROTOCOL_TCP == (p_dst->getFlags() & ESOCKET_FLAGS_PROTOCOLS))
+          {
+            l_ret = p_dst->send(l_datas, l_len);
+          }
+          else
+          {
+            l_ret = m_src->sendto(l_datas, l_len, p_dst);
+          }
+        }
+        if (EERROR_NONE == mEERROR_G.m_errorCode)
+        {
+          if (l_ret < l_len)
+          {
+            mEERROR_S(EERROR_PACKET_TRUNCATED);
+          }
+        }
+        else
+        {
+          mEERROR_SA(EERROR_PACKET_SEND, mEERROR_G.toString());
+        }
+        delete (l_datas);
+      }
+      else
+      {
+        mEERROR_S(EERROR_OOM);
+      }
+    }
+  }
+
+  /**
     @brief Get type of the EPacket.
     @return EPacketType of the EPacket.
   */
@@ -109,56 +168,8 @@ namespace         ELib
   */
   void            EPacketDisconnect::send(ESocket *p_dst)
   {
-    mEERROR_R();
-    if (nullptr == m_src)
-    {
-      mEERROR_S(EERROR_SOCKET_INVALID);
-    }
-
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
-    {
-      char        *l_datas = nullptr;
-      int32       l_len = 0;
-      int32       l_ret = -1;
-
-      l_len = sizeof(EPacketType);
-      l_datas = new char[l_len];
-      if (nullptr != l_datas)
-      {
-        memcpy(l_datas, &m_type, sizeof(EPacketType));
-        if (nullptr == p_dst)
-        {
-          l_ret = m_src->send(l_datas, l_len);
-        }
-        else
-        {
-          if (ESOCKET_FLAGS_PROTOCOL_TCP == (p_dst->getFlags() & ESOCKET_FLAGS_PROTOCOLS))
-          {
-            l_ret = p_dst->send(l_datas, l_len);
-          }
-          else
-          {
-            l_ret = m_src->sendto(l_datas, l_len, p_dst);
-          }
-        }
-        if (EERROR_NONE == mEERROR_G.m_errorCode)
-        {
-          if (l_ret < l_len)
-          {
-            mEERROR_S(EERROR_PACKET_TRUNCATED);
-          }
-        }
-        else
-        {
-          mEERROR_SA(EERROR_PACKET_SEND, mEERROR_G.toString());
-        }
-        delete(l_datas);
-      }
-      else
-      {
-        mEERROR_S(EERROR_OOM);
-      }
-    }
+    EPacket::send(nullptr, 0, p_dst);
+    //}
   }
 
   /**
@@ -213,56 +224,7 @@ namespace         ELib
   */
   void            EPacketConnect::send(ESocket *p_dst)
   {
-    mEERROR_R();
-    if (nullptr == m_src)
-    {
-      mEERROR_S(EERROR_SOCKET_INVALID);
-    }
-
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
-    {
-      char        *l_datas = nullptr;
-      int32       l_len = 0;
-      int32       l_ret = -1;
-
-      l_len = sizeof(EPacketType);
-      l_datas = new char[l_len];
-      if (nullptr != l_datas)
-      {
-        memcpy(l_datas, &m_type, sizeof(EPacketType));
-        if (nullptr == p_dst)
-        {
-          l_ret = m_src->send(l_datas, l_len);
-        }
-        else
-        {
-          if (ESOCKET_FLAGS_PROTOCOL_TCP == (p_dst->getFlags() & ESOCKET_FLAGS_PROTOCOLS))
-          {
-            l_ret = p_dst->send(l_datas, l_len);
-          }
-          else
-          {
-            l_ret = m_src->sendto(l_datas, l_len, p_dst);
-          }
-        }
-        if (EERROR_NONE == mEERROR_G.m_errorCode)
-        {
-          if (l_ret < l_len)
-          {
-            mEERROR_S(EERROR_PACKET_TRUNCATED);
-          }
-        }
-        else
-        {
-          mEERROR_SA(EERROR_PACKET_SEND, mEERROR_G.toString());
-        }
-        delete(l_datas);
-      }
-      else
-      {
-        mEERROR_S(EERROR_OOM);
-      }
-    }
+    EPacket::send(nullptr, 0, p_dst);
   }
 
   /**
@@ -401,56 +363,25 @@ namespace         ELib
   */
   void            EPacketRawDatas::send(ESocket *p_dst)
   {
+    char          *l_datas = nullptr;
+    int32         l_len = -1;
+
     mEERROR_R();
-    if (nullptr == m_src)
+    l_len = sizeof(int32) + m_len;
+    l_datas = new char[l_len];
+    if (nullptr != l_datas)
     {
-      mEERROR_S(EERROR_SOCKET_INVALID);
+      memcpy(l_datas, &l_len, sizeof(int32));
+      memcpy(l_datas + sizeof(int32), l_datas, l_len);
+    }
+    else
+    {
+      mEERROR_S(EERROR_OOM);
     }
 
     if (EERROR_NONE == mEERROR_G.m_errorCode)
     {
-      char        *l_datas = nullptr;
-      int32       l_len = 0;
-      int32       l_ret = -1;
-
-      l_len = sizeof(EPacketType) + sizeof(int32) + m_len;
-      l_datas = new char[l_len];
-      if (nullptr != l_datas)
-      {
-        memcpy(l_datas, &m_type, sizeof(EPacketType));
-        memcpy(l_datas + sizeof(EPacketType), &m_len, sizeof(int32));
-        memcpy(l_datas + sizeof(EPacketType) + sizeof(int32), m_datas, m_len);
-        if (nullptr == p_dst)
-        {
-          l_ret = m_src->send(l_datas, l_len);
-        }
-        else
-        {
-          if (ESOCKET_FLAGS_PROTOCOL_TCP == (p_dst->getFlags() & ESOCKET_FLAGS_PROTOCOLS))
-          {
-            l_ret = p_dst->send(l_datas, l_len);
-          }
-          else
-          {
-            l_ret = m_src->sendto(l_datas, l_len, p_dst);
-          }
-        }
-        if (EERROR_NONE == mEERROR_G.m_errorCode)
-        {
-          if (l_ret < l_len)
-          {
-            mEERROR_S(EERROR_PACKET_TRUNCATED);
-          }
-        }
-        else
-        {
-          mEERROR_SA(EERROR_PACKET_SEND, mEERROR_G.toString());
-        }
-      }
-      else
-      {
-        mEERROR_S(EERROR_OOM);
-      }
+      EPacket::send(m_datas, m_len, p_dst);
     }
   }
 

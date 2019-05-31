@@ -87,11 +87,12 @@ namespace               ELib
   */
   struct                EError
   {
-    EErrorCode          m_errorCode;        /**< Code from EErrorCode enum */
-    std::string         m_functionName;     /**< Function where the error occured */
-    std::string         m_fileName;         /**< Filename where the function is located */
-    int                 m_lineNumber;       /**< Line number where the function is located */
-    std::string         m_additionnalInfos; /**< Informations such as parent EError or WSA error... */
+    EError();                               /**< Empty constructor used for initialing globals. */
+    EErrorCode          m_errorCode;        /**< Code from EErrorCode enum. */
+    std::string         m_functionName;     /**< Function where the error occured. */
+    std::string         m_fileName;         /**< Filename where the function is located. */
+    int                 m_lineNumber;       /**< Line number where the function is located. */
+    std::string         m_additionnalInfos; /**< Informations such as parent EError or WSA error. */
     void                formatInfos();
     const std::string   toString() const;
     void                print() const;
