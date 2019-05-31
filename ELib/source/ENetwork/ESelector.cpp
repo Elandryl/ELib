@@ -4,7 +4,6 @@
   @brief Source for ESelector Class.
 */
 
-#include <iostream>
 #include "ENetwork/ESelector.h"
 
 /**
@@ -140,7 +139,6 @@ namespace                   ELib
               mEERROR_SA(EERROR_SELECTOR_RECV, mEERROR_G.toString());
               m_packetHandler.generate(*l_it, reinterpret_cast<char*>(&l_type), sizeof(EPacketType));
               (*l_it)->close();
-              std::cout << "EClient " << **l_it << " disconnected with error" << std::endl;
             }
           }
         }

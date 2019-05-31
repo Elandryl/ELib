@@ -29,7 +29,7 @@ namespace           ELib
   /**
     @brief Parent object for EPacket generation.
     @details A class need to inherit from this class to be used in the EPacketHandler automation.
-    @details recv, generate and send are virtual pure functions and must be implemented in child class.
+    @details recv, generate and send must be implemented in child class.
   */
   class             EPacket
   {

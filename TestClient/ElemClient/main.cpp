@@ -101,24 +101,24 @@ DWORD WINAPI                  recvPackets(LPVOID p_param)
     {
       switch (l_packet->getType())
       {
-        //case ELib::EPACKET_TYPE_DISCONNECT:
-        //{
-        //  std::cout << *l_packet->getSource() << " disconnected" << std::endl;
-        //}
-        //  break;
-        //case ELib::EPACKET_TYPE_CONNECT:
-        //{
-        //  std::cout << *l_packet->getSource() << " connected" << std::endl;
-        //}
-        //  break;
-        //case ELib::EPACKET_TYPE_RAW_DATAS:
-        //{
-        //  std::cout << *l_packet->getSource() << " " << reinterpret_cast<ELib::EPacketRawDatas*>(l_packet)->getDatas() << std::endl;
-        //}
-        //  break;
+        case ELib::EPACKET_TYPE_DISCONNECT:
+        {
+          l_client->getPrinter().print(ELib::EPRINT_TYPE_PRIORITY_ERROR, std::to_string(*l_packet->getSource()) + " disconnected");
+        }
+          break;
+        case ELib::EPACKET_TYPE_CONNECT:
+        {
+          l_client->getPrinter().print(ELib::EPRINT_TYPE_PRIORITY_ERROR, std::to_string(*l_packet->getSource()) + " connected");
+        }
+          break;
+        case ELib::EPACKET_TYPE_RAW_DATAS:
+        {
+          l_client->getPrinter().print(ELib::EPRINT_TYPE_PRIORITY_ERROR, std::to_string(*l_packet->getSource()) + " " + reinterpret_cast<ELib::EPacketRawDatas*>(l_packet)->getDatas());
+        }
+          break;
         case CUSTOM_PACKET_TYPE_CHAT:
         {
-          std::cout << reinterpret_cast<CustomPacketChat*>(l_packet)->getLogin() << ": " << reinterpret_cast<CustomPacketChat*>(l_packet)->getMessage() << std::endl;
+          l_client->getPrinter().print(ELib::EPRINT_TYPE_PRIORITY_STD, reinterpret_cast<CustomPacketChat*>(l_packet)->getLogin() + ": " + reinterpret_cast<CustomPacketChat*>(l_packet)->getMessage());
         }
           break;
         default:
@@ -127,7 +127,7 @@ DWORD WINAPI                  recvPackets(LPVOID p_param)
       delete (l_packet);
     }
   }
-  std::cout << "EServer disconnected" << std::endl;
+  l_client->getPrinter().print(ELib::EPRINT_TYPE_PRIORITY_ERROR, "EServer disconnected");
   return (0);
 }
 
@@ -137,9 +137,9 @@ int                           main()
   {
     ELib::EClient             l_client;
 
+    l_client.getPrinter().start();
     l_client.init("192.168.1.50", 2222);
     l_client.getPacketHandler().setGenerator(static_cast<ELib::EPacketType>(CUSTOM_PACKET_TYPE_CHAT), generatePacketChat);
-
     if (ELib::EERROR_NONE == mEERROR_G.m_errorCode)
     {
       l_client.start();
@@ -149,13 +149,13 @@ int                           main()
       ELib::EPacket           *l_disconnect = new ELib::EPacketDisconnect();
       std::string             l_in;
 
-      std::cout << "Enter your login: ";
-      std::getline(std::cin, l_in);
+      l_client.getPrinter().print(ELib::EPRINT_TYPE_SPECIAL_ACTIVE, "Enter your login: ");
+      l_in = l_client.getPrinter().getLine();
       l_packet->setLogin(l_in);
       while (true == l_client.isRunning())
       {
-        std::cout << "Message: ";
-        std::getline(std::cin, l_in);
+        l_client.getPrinter().print(ELib::EPRINT_TYPE_SPECIAL_ACTIVE, "Message: ");
+        l_in = l_client.getPrinter().getLine();
         l_packet->setMessage(l_in);
         l_client.sendPacket(l_packet);
       }

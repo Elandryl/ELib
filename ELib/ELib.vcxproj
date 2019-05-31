@@ -26,6 +26,7 @@
     <ClInclude Include="include\ENetwork\ESelector.h" />
     <ClInclude Include="include\ENetwork\EServer.h" />
     <ClInclude Include="include\ENetwork\ESocket.h" />
+    <ClInclude Include="include\EPrint.h" />
     <ClInclude Include="include\ESQL\ESQL.h" />
     <ClInclude Include="include\ESQL\ESQLField.h" />
     <ClInclude Include="include\ESQL\ESQLResult.h" />
@@ -41,6 +42,7 @@
     <ClCompile Include="source\ENetwork\ESelector.cpp" />
     <ClCompile Include="source\ENetwork\EServer.cpp" />
     <ClCompile Include="source\ENetwork\ESocket.cpp" />
+    <ClCompile Include="source\EPrint.cpp" />
     <ClCompile Include="source\ESQL\ESQL.cpp" />
     <ClCompile Include="source\ESQL\ESQLField.cpp" />
     <ClCompile Include="source\ESQL\ESQLResult.cpp" />

@@ -52,6 +52,7 @@ namespace               ELib
     EERROR_SELECTOR_EMPTY,
     EERROR_SELECTOR_SELECT,
     EERROR_SELECTOR_RECV,
+    EERROR_SELECTOR_SEND,
 
     EERROR_SERVER_INIT,
     EERROR_SERVER_START,
@@ -95,15 +96,18 @@ namespace               ELib
     std::string         m_additionnalInfos; /**< Informations such as parent EError or WSA error. */
     void                formatInfos();
     const std::string   toString() const;
-    void                print() const;
   };
 
+  /**
+    @brief ELib function to retrieve Windows error informations.
+    @return Windows error informations as a string.
+  */
   std::string           getWSAErrString();
 
   /**
     @brief ELib object for exception handling.
     @details Automatically retrieve the last error at initialization.
-    @details Inherit from std::exception and implements what().
+    @details Inherit from std::exception.
   */
   class                 EException : std::exception
   {
@@ -111,7 +115,6 @@ namespace               ELib
     EException();
     virtual ~EException();
     const std::string   toString() const;
-    void                print() const;
     void                printBox() const;
   };
 
@@ -139,7 +142,6 @@ extern ELib::EError     __gELastEError;
   mEERROR_G.m_functionName = __FUNCTION__;            \
   mEERROR_G.m_fileName = __FILE__;                    \
   mEERROR_G.m_lineNumber = __LINE__;                  \
-  /*mEERROR_G.print();*/                                  \
 }
 
 #define mEERROR_SA(p_errorCode, p_additionnalInfos)   \

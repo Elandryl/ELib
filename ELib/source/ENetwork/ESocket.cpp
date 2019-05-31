@@ -526,6 +526,10 @@ namespace             ELib
     return (static_cast<uint64>(m_socket));
   }
 
+  /**
+    @brief Retrieve ESocket informations.
+    @return Informations of the ESocket.
+  */
   const std::string   ESocket::toString() const
   {
     std::string       str = "";

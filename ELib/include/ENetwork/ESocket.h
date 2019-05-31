@@ -47,6 +47,8 @@ namespace               ELib
 
   /**
     @brief ELib object for socket handling.
+    @details Class for Socket functionalities and management.
+    @details It can use multiple protocols and keep track of ESocket state.
   */
   class                 ESocket
   {
@@ -74,7 +76,7 @@ namespace               ELib
     SOCKET              m_socket;   /**< Unique identifier. */
     std::string         m_hostname; /**< Internet host address in number-and-dots notation. */
     uint16              m_port;     /**< Internet host port. */
-    ESocketFlags        m_flags;    /**< Flags. */
+    ESocketFlags        m_flags;    /**< Flags for state and protocol. */
   };
 
 }

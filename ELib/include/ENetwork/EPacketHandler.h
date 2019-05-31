@@ -17,12 +17,17 @@ namespace                   ELib
 {
 
   /**
-    @details Pointer to Function for auto-generation of EPacket.
+    @brief Pointer to Function for auto-generation of EPacket.
     @param p_src Pointer to ESocket source of the EPacket.
     @return Pointer to new EPacket. Type depends on EPacketGenerator used.
   */
   typedef EPacket *(*EPacketGenerator)(ESocket *p_src);
 
+  /**
+    @brief ELib object for EPacket handling.
+    @details Automatically receive and contain every EPacket of an application.
+    @details Basic generator are provided. More can be provided with custom EPacketType.
+  */
   class                     EPacketHandler
   {
   public:

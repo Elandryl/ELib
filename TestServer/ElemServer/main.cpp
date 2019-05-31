@@ -138,6 +138,7 @@ int	                      main()
   {
     ELib::EServer         l_server;
 
+    l_server.getPrinter().start();
     l_server.init("192.168.1.50", 2222);
     l_server.getPacketHandler().setGenerator(static_cast<ELib::EPacketType>(CUSTOM_PACKET_TYPE_CHAT), generatePacketChat);
     if (ELib::EERROR_NONE == mEERROR_G.m_errorCode)

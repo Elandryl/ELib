@@ -4,7 +4,6 @@
   @brief Source for EClient Class.
 */
 
-#include <iostream>
 #include "ENetwork/EClient.h"
 
 /**
@@ -34,6 +33,7 @@ namespace           ELib
     m_socketServer(),
     m_threadRecvPacket(nullptr),
     m_packetHandler(),
+    m_printer(),
     m_isRunning(false)
   {
     WSADATA                       WSAData = { 0 };
@@ -81,7 +81,7 @@ namespace           ELib
         m_socketServer.connect(p_hostname, p_port);
         if (EERROR_NONE == mEERROR_G.m_errorCode)
         {
-          std::cout << "EClient successfully connected to EServer at " << p_hostname << ":" << p_port << std::endl;
+          m_printer.print(EPRINT_TYPE_PRIORITY_STD, "EClient successfully connected to EServer at " + p_hostname + ":" + std::to_string(p_port));
         }
         else
         {
@@ -105,7 +105,7 @@ namespace           ELib
     {
       m_threadRecvPacket = CreateThread(nullptr, 0, RecvPacketFunctor, this, 0, nullptr);
       m_isRunning = true;
-      std::cout << "EClient started" << std::endl;
+      m_printer.print(EPRINT_TYPE_PRIORITY_STD, "EClient started");
     }
   }
 
@@ -119,7 +119,7 @@ namespace           ELib
     {
       m_isRunning = false;
       TerminateThread(m_threadRecvPacket, 0);
-      std::cout << "EClient stopped" << std::endl;
+      m_printer.print(EPRINT_TYPE_PRIORITY_STD, "EClient stopped");
     }
   }
 
@@ -146,10 +146,21 @@ namespace           ELib
     }
   }
 
+  /**
+    @brief Handle the sending of EPacket to the ESocket server.
+    @param p_packet Packet to be send.
+    @eerror EERROR_NONE in success.
+    @eerror EERROR_SELECTOR_SEND if send() failed.
+  */
   void              EClient::sendPacket(EPacket *p_packet)
   {
+    mEERROR_R();
     p_packet->setSource(&m_socketServer);
     p_packet->send();
+    if (EERROR_NONE != mEERROR_G.m_errorCode)
+    {
+      mEERROR_SA(EERROR_SELECTOR_SEND, mEERROR_G.toString());
+    }
   }
 
   /**
@@ -159,6 +170,15 @@ namespace           ELib
   EPacketHandler    &EClient::getPacketHandler()
   {
     return (m_packetHandler);
+  }
+
+  /**
+    @brief Get the EPrinter of the EClient.
+    @return EPrinter of the EClient.
+  */
+  EPrinter          &EClient::getPrinter()
+  {
+    return (m_printer);
   }
 
   /**

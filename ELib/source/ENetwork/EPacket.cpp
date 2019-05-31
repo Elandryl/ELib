@@ -33,11 +33,24 @@ namespace         ELib
   /**
     @brief Send EPacket informations and datas.
     @details Automatically handle the target selection and EPacket informations sending.
+    @param p_datas Datas to be send.
+    @param p_len Length of datas to be send.
+    @param p_dst ESocket destination. This can be null if EPacket source is a connected ESocket.
+    @eerror EERROR_NONE in success.
+    @eerror EERROR_SOCKET_INVALID if m_src is null or if p_dst is null and m_src protocol is ESOCKET_FLAGS_PROTOCOL_UDP.
+    @eerror EERROR_PACKET_TRUNCATED if not all the datas were sent successfully.
+    @eerror EERROR_PACKET_SEND if send() failed.
+    @errror EERROR_OOM if l_datas couldn't be allocated.
   */
   void            EPacket::send(const char *p_datas, int32 p_len, ESocket *p_dst)
   {
     mEERROR_R();
     if (nullptr == m_src)
+    {
+      mEERROR_S(EERROR_SOCKET_INVALID);
+    }
+    if ((nullptr == p_dst)
+      && (ESOCKET_FLAGS_PROTOCOL_UDP == (m_src->getFlags() & ESOCKET_FLAGS_PROTOCOLS)))
     {
       mEERROR_S(EERROR_SOCKET_INVALID);
     }
@@ -64,7 +77,7 @@ namespace         ELib
           {
             l_ret = p_dst->send(l_datas, l_len);
           }
-          else
+          if (ESOCKET_FLAGS_PROTOCOL_UDP == (p_dst->getFlags() & ESOCKET_FLAGS_PROTOCOLS))
           {
             l_ret = m_src->sendto(l_datas, l_len, p_dst);
           }

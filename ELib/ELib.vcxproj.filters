@@ -60,6 +60,9 @@
     <ClInclude Include="include\EError.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\EPrint.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\ENetwork\EServer.cpp">
@@ -93,6 +96,9 @@
       <Filter>source\ENetwork</Filter>
     </ClCompile>
     <ClCompile Include="source\EError.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EPrint.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

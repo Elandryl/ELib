@@ -125,14 +125,6 @@ namespace             ELib
   }
 
   /**
-    @brief Print the String of Exception Information through std::cerr.
-  */
-  void                EError::print() const
-  {
-    std::cerr << toString();
-  }
-
-  /**
     @brief Retrieve WSA last error and returns its informations.
     @return String containing informations of last WSA error.
   */
@@ -146,7 +138,6 @@ namespace             ELib
     l_err = WSAGetLastError();
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, l_err,
       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)l_buf, 0, NULL);
-    std::cout << l_buf << std::endl;
     //l_str = CW2A(l_buf, CP_UTF8);
     LocalFree(l_buf);
     return (l_str);
@@ -174,14 +165,6 @@ namespace             ELib
   const std::string   EException::toString() const
   {
     return (what());
-  }
-
-  /**
-    @brief Print the String of Exception Information through std::cerr.
-  */
-  void                EException::print() const
-  {
-    std::cerr << what();
   }
 
   /**
