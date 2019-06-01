@@ -37,7 +37,7 @@ namespace                         ELib
     @details This can be provided for Pre and Post handling of EPrinter.
     @param p_messages Queue of messages for special EPrintType.
   */
-  typedef void (*ESpecialPrinter)(std::queue<std::string> &p_messages);
+  typedef void(*ESpecialPrinter)(std::queue<std::string> &p_messages);
 
   /**
     @brief Pointer to Function for ESpecialPrinter processing.
@@ -46,7 +46,7 @@ namespace                         ELib
     @param p_message New message to be processed.
     @param p_messages Queue of messages for special EPrintType.
   */
-  typedef void (*ESpecialProc)(EPrintType p_type, const std::string &p_message, std::queue<std::string> &p_messages);
+  typedef void(*ESpecialProc)(EPrintType p_type, const std::string &p_message, std::queue<std::string> &p_messages);
 
   /**
     @brief ELib object for printing handling.
@@ -86,4 +86,28 @@ namespace                         ELib
       ESpecialPrinter>            m_specialPostPrinters;  /**< Printers for special messages. */
   };
 
+  /**
+    @brief Global variable for printing handling.
+    @details Easy access maccro is provided with mEPRINT_G
+    @details Easy usage maccro is provided with mEPRINT.
+  */
+  extern EPrinter                 __gEPrinter;
+
+}
+
+#define mEPRINT_G                 (ELib::__gEPrinter)
+
+#define mEPRINT_STD(p_message)                                    \
+{                                                                 \
+  mEPRINT_G.print(ELib::EPRINT_TYPE_PRIORITY_STD, p_message);     \
+}
+
+#define mEPRINT_ERR(p_message)                                    \
+{                                                                 \
+  mEPRINT_G.print(ELib::EPRINT_TYPE_PRIORITY_ERROR, p_message);   \
+}
+
+#define mEPRINT_TYPE(p_type, p_message)                           \
+{                                                                 \
+  mEPRINT_G.print(p_type, p_message);                             \
 }

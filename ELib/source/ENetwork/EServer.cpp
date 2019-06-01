@@ -35,7 +35,6 @@ namespace                         ELib
     m_threadAccept(nullptr),
     m_mutexSelectors(nullptr),
     m_packetHandler(),
-    m_printer(),
     m_isRunning(false)
   {
     WSADATA                       WSAData = { 0 };
@@ -94,7 +93,7 @@ namespace                         ELib
           m_socketAccept.listen();
           if (EERROR_NONE == mEERROR_G.m_errorCode)
           {
-            m_printer.print(EPRINT_TYPE_PRIORITY_STD, "EServer successfully connected to " + p_hostname + ":" + std::to_string(p_port));
+            mEPRINT_STD("EServer successfully connected to " + p_hostname + ":" + std::to_string(p_port));
           }
           else
           {
@@ -138,7 +137,7 @@ namespace                         ELib
       ReleaseMutex(m_mutexSelectors);
       m_threadAccept = CreateThread(nullptr, 0, AcceptFunctor, this, 0, nullptr);
       m_isRunning = true;
-      m_printer.print(EPRINT_TYPE_PRIORITY_STD, "EServer started");
+      mEPRINT_STD("EServer started");
     }
   }
 
@@ -165,7 +164,7 @@ namespace                         ELib
         }
       }
       ReleaseMutex(m_mutexSelectors);
-      m_printer.print(EPRINT_TYPE_PRIORITY_STD, "EServer stopped");
+      mEPRINT_STD("EServer stopped");
     }
   }
 
@@ -186,7 +185,7 @@ namespace                         ELib
         addClient(l_client);
         if (EERROR_NONE != mEERROR_G.m_errorCode)
         {
-          m_printer.print(EPRINT_TYPE_PRIORITY_ERROR, "Failed to connect EClient" + std::to_string(*l_client));
+          mEPRINT_ERR("Failed to connect EClient" + std::to_string(*l_client));
           delete (l_client);
         }
       }
@@ -314,15 +313,6 @@ namespace                         ELib
   EPacketHandler                  &EServer::getPacketHandler()
   {
     return (m_packetHandler);
-  }
-
-  /**
-    @brief Get the EPrinter of the EServer.
-    @return EPrinter of the EServer.
-  */
-  EPrinter                        &EServer::getPrinter()
-  {
-    return (m_printer);
   }
 
   /**

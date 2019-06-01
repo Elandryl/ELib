@@ -33,7 +33,6 @@ namespace           ELib
     m_socketServer(),
     m_threadRecvPacket(nullptr),
     m_packetHandler(),
-    m_printer(),
     m_isRunning(false)
   {
     WSADATA                       WSAData = { 0 };
@@ -81,7 +80,7 @@ namespace           ELib
         m_socketServer.connect(p_hostname, p_port);
         if (EERROR_NONE == mEERROR_G.m_errorCode)
         {
-          m_printer.print(EPRINT_TYPE_PRIORITY_STD, "EClient successfully connected to EServer at " + p_hostname + ":" + std::to_string(p_port));
+          mEPRINT_STD("EClient successfully connected to EServer at " + p_hostname + ":" + std::to_string(p_port));
         }
         else
         {
@@ -105,7 +104,7 @@ namespace           ELib
     {
       m_threadRecvPacket = CreateThread(nullptr, 0, RecvPacketFunctor, this, 0, nullptr);
       m_isRunning = true;
-      m_printer.print(EPRINT_TYPE_PRIORITY_STD, "EClient started");
+      mEPRINT_STD("EClient started");
     }
   }
 
@@ -119,7 +118,7 @@ namespace           ELib
     {
       m_isRunning = false;
       TerminateThread(m_threadRecvPacket, 0);
-      m_printer.print(EPRINT_TYPE_PRIORITY_STD, "EClient stopped");
+      mEPRINT_STD("EClient stopped");
     }
   }
 
@@ -170,15 +169,6 @@ namespace           ELib
   EPacketHandler    &EClient::getPacketHandler()
   {
     return (m_packetHandler);
-  }
-
-  /**
-    @brief Get the EPrinter of the EClient.
-    @return EPrinter of the EClient.
-  */
-  EPrinter          &EClient::getPrinter()
-  {
-    return (m_printer);
   }
 
   /**

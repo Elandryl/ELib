@@ -103,22 +103,22 @@ DWORD WINAPI              recvPackets(LPVOID p_param)
       {
         case ELib::EPACKET_TYPE_DISCONNECT:
         {
-          std::cout << *l_packet->getSource() << " disconnected" << std::endl;
+          mEPRINT_STD(std::to_string(*l_packet->getSource()) + " disconnected");
         }
           break;
         case ELib::EPACKET_TYPE_CONNECT:
         {
-          std::cout << *l_packet->getSource() << " connected" << std::endl;
+          mEPRINT_STD(std::to_string(*l_packet->getSource()) + " connected");
         }
           break;
         case ELib::EPACKET_TYPE_RAW_DATAS:
         {
-          std::cout << *l_packet->getSource() << " " << reinterpret_cast<ELib::EPacketRawDatas*>(l_packet)->getDatas() << std::endl;
+          mEPRINT_STD(std::to_string(*l_packet->getSource()) + " " + reinterpret_cast<ELib::EPacketRawDatas*>(l_packet)->getDatas());
         }
           break;
         case CUSTOM_PACKET_TYPE_CHAT:
         {
-          std::cout << reinterpret_cast<CustomPacketChat*>(l_packet)->getLogin() << ": " << reinterpret_cast<CustomPacketChat*>(l_packet)->getMessage() << std::endl;
+          mEPRINT_STD(reinterpret_cast<CustomPacketChat*>(l_packet)->getLogin() + ": " + reinterpret_cast<CustomPacketChat*>(l_packet)->getMessage());
         }
           break;
         default:
@@ -138,7 +138,7 @@ int	                      main()
   {
     ELib::EServer         l_server;
 
-    l_server.getPrinter().start();
+    mEPRINT_G.start();
     l_server.init("192.168.1.50", 2222);
     l_server.getPacketHandler().setGenerator(static_cast<ELib::EPacketType>(CUSTOM_PACKET_TYPE_CHAT), generatePacketChat);
     if (ELib::EERROR_NONE == mEERROR_G.m_errorCode)

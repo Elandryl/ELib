@@ -34,7 +34,6 @@ namespace                     ELib
     void                      clearSelectors();
     EPacketHandler            &getPacketHandler();
     bool                      isRunning() const;
-    EPrinter                  &getPrinter();
     const std::string         toString() const;
 
   private:
@@ -43,7 +42,6 @@ namespace                     ELib
     HANDLE                    m_threadAccept;   /**< Handle for accept thread. */
     HANDLE                    m_mutexSelectors; /**< Semaphore for m_selectors thread safety. */
     EPacketHandler            m_packetHandler;  /**< EPacketHandler that contains the received EPackets. */
-    EPrinter                  m_printer;        /**< EPrinter for console printing. */
     bool                      m_isRunning;      /**< Indicate if EServer is running. */
   };
 

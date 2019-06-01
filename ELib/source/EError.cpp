@@ -8,13 +8,16 @@
 #include <iostream>
 #include <atlstr.h>
 
-ELib::EError          __gELastEError;
-
 /**
   @brief General scope for ELib components.
 */
 namespace             ELib
 {
+
+  /**
+    @brief Unique definition for global gELastEError.
+  */
+  ELib::EError        __gELastEError;
 
   /**
     @brief EError definitions for EErrorCodes.
@@ -134,11 +137,10 @@ namespace             ELib
     LPWSTR            l_buf = nullptr;
     std::string       l_str = "";
 
-    return (l_str);
     l_err = WSAGetLastError();
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, l_err,
-      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)l_buf, 0, NULL);
-    //l_str = CW2A(l_buf, CP_UTF8);
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, l_err,
+      NULL, reinterpret_cast<LPWSTR>(&l_buf), 0, NULL);
+    l_str = CW2A(l_buf, CP_UTF8);
     LocalFree(l_buf);
     return (l_str);
   }

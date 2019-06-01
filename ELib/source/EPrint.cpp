@@ -15,11 +15,16 @@ namespace         ELib
 {
 
   /**
+    @brief Unique definition for global gEPrinter.
+  */
+  ELib::EPrinter  __gEPrinter;
+
+  /**
     @brief Processing function for EPRINT_TYPE_SPECIAL_ACTIVE printing.
     @details It is called when a new printing is asked by application.
     @details Make sure only one message of Active is handled.
     @param p_type EPrintType of the new message to be processed.
-    @param p_message New message to be processed.
+    @param p_message New message to be processed. Empty message will flush the queue.
     @param p_messages Queue of messages for special EPrintType.
   */
   void            EPrinterActiveProc(EPrintType p_type, const std::string &p_message, std::queue<std::string> &p_messages)
@@ -195,6 +200,7 @@ namespace         ELib
   /**
     @brief User function for printing.
     @details Handle message for printing automation, depending on its type.
+    @details If EPrinter is not started, printing is simply printed on standard output.
     @details Special messages are handle by user defined Proc function. Container for them are provided with GetSpecialMessages.
     @param p_type EPrintType of the new message to be handle.
     @param p_message New message to be handle.
@@ -217,6 +223,10 @@ namespace         ELib
         m_priorityMessages[p_type].push(p_message);
       }
       ReleaseMutex(m_mutexPrinter);
+    }
+    else
+    {
+      std::cout << p_message << std::endl;
     }
   }
 
@@ -256,7 +266,6 @@ namespace         ELib
       }
       l_cin = _getch();
     }
-    std::cout << std::endl;
     
     return (l_line);
   }

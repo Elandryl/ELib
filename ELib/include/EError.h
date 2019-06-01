@@ -8,6 +8,7 @@
 
 #include <Windows.h>
 #include <string>
+#include "EGlobal.h"
 
 /**
   @brief General scope for ELib components.
@@ -118,18 +119,18 @@ namespace               ELib
     void                printBox() const;
   };
 
+  /**
+    @brief Global variable for error tracking.
+    @details Easy access maccro is defined as mEERROR_G.
+    @details Easy modifier maccro are defined as mEERROR_S and mEERROR_SA.
+    @details This is used in EException. User can throw exception by calling mETHROW or mETHROWA.
+    @details Functions implementing this should first reset it with mEERROR_R.
+  */
+  extern EError         __gELastEError;
+
 }
 
-/**
-  @brief Global variable for error tracking.
-  @details Easy access maccro is defined as mEERROR_G.
-  @details Easy modifier maccro are defined as mEERROR_S and mEERROR_SA.
-  @details This is used in EException. User can throw exception by calling mETHROW or mETHROWA.
-  @details Functions implementing this should first reset it with mEERROR_R.
-*/
-extern ELib::EError     __gELastEError;
-
-#define mEERROR_G       (__gELastEError)
+#define mEERROR_G       (ELib::__gELastEError)
 
 #define mEERROR_R()                                   \
 {                                                     \
@@ -142,6 +143,7 @@ extern ELib::EError     __gELastEError;
   mEERROR_G.m_functionName = __FUNCTION__;            \
   mEERROR_G.m_fileName = __FILE__;                    \
   mEERROR_G.m_lineNumber = __LINE__;                  \
+  mEPRINT_ERR(mEERROR_G.toString())                   \
 }
 
 #define mEERROR_SA(p_errorCode, p_additionnalInfos)   \

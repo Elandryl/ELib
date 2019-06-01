@@ -273,30 +273,37 @@ namespace             ELib
   {
     int32             l_len = SOCKET_ERROR;
 
-    mEERROR_R();
-    if (ESOCKET_FLAGS_STATE_CONNECTED != (m_flags & ESOCKET_FLAGS_STATES))
+    if (0 != p_len)
     {
-      mEERROR_S(EERROR_SOCKET_STATE);
-    }
-    if (nullptr == p_datas)
-    {
-      mEERROR_S(EERROR_SOCKET_RECV);
-    }
-
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
-    {
-      l_len = ::recv(m_socket, p_datas, p_len, 0);
-      if (SOCKET_ERROR != l_len)
+      mEERROR_R();
+      if (ESOCKET_FLAGS_STATE_CONNECTED != (m_flags & ESOCKET_FLAGS_STATES))
       {
-        if (0 == l_len)
+        mEERROR_S(EERROR_SOCKET_STATE);
+      }
+      if (nullptr == p_datas)
+      {
+        mEERROR_S(EERROR_SOCKET_RECV);
+      }
+
+      if (EERROR_NONE == mEERROR_G.m_errorCode)
+      {
+        l_len = ::recv(m_socket, p_datas, p_len, 0);
+        if (SOCKET_ERROR != l_len)
         {
-          close();
+          if (0 == l_len)
+          {
+            close();
+          }
+        }
+        else
+        {
+          mEERROR_SA(EERROR_SOCKET_RECV, getWSAErrString());
         }
       }
-      else
-      {
-        mEERROR_SA(EERROR_SOCKET_RECV, getWSAErrString());
-      }
+    }
+    else
+    {
+      l_len = 0;
     }
 
     return (l_len);
@@ -320,35 +327,42 @@ namespace             ELib
     int32             l_infosLen = sizeof(SOCKADDR_IN);
     int32             l_len = SOCKET_ERROR;
 
-    mEERROR_R();
-    if (ESOCKET_FLAGS_STATE_BOUND != (m_flags & ESOCKET_FLAGS_STATES))
+    if (0 != p_len)
     {
-      mEERROR_S(EERROR_SOCKET_STATE);
-    }
-    if ((nullptr == p_src)
-      || (ESOCKET_FLAGS_STATE_UNINITIALIZED != (p_src->m_flags & ESOCKET_FLAGS_STATES)))
-    {
-      mEERROR_S(EERROR_SOCKET_INVALID);
-    }
-    if (nullptr == p_datas)
-    {
-      mEERROR_S(EERROR_SOCKET_RECVFROM);
-    }
-    
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
-    {
-      SOCKADDR_IN     l_infos = { 0 };
+      mEERROR_R();
+      if (ESOCKET_FLAGS_STATE_BOUND != (m_flags & ESOCKET_FLAGS_STATES))
+      {
+        mEERROR_S(EERROR_SOCKET_STATE);
+      }
+      if ((nullptr == p_src)
+        || (ESOCKET_FLAGS_STATE_UNINITIALIZED != (p_src->m_flags & ESOCKET_FLAGS_STATES)))
+      {
+        mEERROR_S(EERROR_SOCKET_INVALID);
+      }
+      if (nullptr == p_datas)
+      {
+        mEERROR_S(EERROR_SOCKET_RECVFROM);
+      }
 
-      l_len = ::recvfrom(m_socket, p_datas, p_len, 0, reinterpret_cast<SOCKADDR*>(&l_infos), &l_infosLen);
-      if (SOCKET_ERROR == l_len)
+      if (EERROR_NONE == mEERROR_G.m_errorCode)
       {
-        p_src->m_hostname = inet_ntoa(l_infos.sin_addr);
-        p_src->m_port = l_infos.sin_port;
+        SOCKADDR_IN     l_infos = { 0 };
+
+        l_len = ::recvfrom(m_socket, p_datas, p_len, 0, reinterpret_cast<SOCKADDR*>(&l_infos), &l_infosLen);
+        if (SOCKET_ERROR == l_len)
+        {
+          p_src->m_hostname = inet_ntoa(l_infos.sin_addr);
+          p_src->m_port = l_infos.sin_port;
+        }
+        else
+        {
+          mEERROR_SA(EERROR_SOCKET_RECVFROM, getWSAErrString());
+        }
       }
-      else
-      {
-        mEERROR_SA(EERROR_SOCKET_RECVFROM, getWSAErrString());
-      }
+    }
+    else
+    {
+      l_len = 0;
     }
 
     return (l_len);
