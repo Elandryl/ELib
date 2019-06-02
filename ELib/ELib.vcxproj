@@ -19,30 +19,30 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\EError.h" />
-    <ClInclude Include="include\ENetwork\EClient.h" />
-    <ClInclude Include="include\ENetwork\EPacket.h" />
-    <ClInclude Include="include\ENetwork\EPacketHandler.h" />
-    <ClInclude Include="include\ENetwork\ESelector.h" />
-    <ClInclude Include="include\ENetwork\EServer.h" />
-    <ClInclude Include="include\ENetwork\ESocket.h" />
-    <ClInclude Include="include\EPrint.h" />
+    <ClInclude Include="include\EGlobals\EError.h" />
+    <ClInclude Include="include\EGlobals\EGlobal.h" />
+    <ClInclude Include="include\EGlobals\EPrint.h" />
+    <ClInclude Include="include\EGlobals\EScaledTypes.h" />
+    <ClInclude Include="include\ENetwork\ENetClient.h" />
+    <ClInclude Include="include\ENetwork\ENetPacket.h" />
+    <ClInclude Include="include\ENetwork\ENetPacketHandler.h" />
+    <ClInclude Include="include\ENetwork\ENetSelector.h" />
+    <ClInclude Include="include\ENetwork\ENetServer.h" />
+    <ClInclude Include="include\ENetwork\ENetSocket.h" />
     <ClInclude Include="include\ESQL\ESQL.h" />
     <ClInclude Include="include\ESQL\ESQLField.h" />
     <ClInclude Include="include\ESQL\ESQLResult.h" />
     <ClInclude Include="include\ESQL\ESQLRow.h" />
-    <ClInclude Include="include\EGlobal.h" />
-    <ClInclude Include="include\EScaledTypes.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\EError.cpp" />
-    <ClCompile Include="source\ENetwork\EClient.cpp" />
-    <ClCompile Include="source\ENetwork\EPacket.cpp" />
-    <ClCompile Include="source\ENetwork\EPacketHandler.cpp" />
-    <ClCompile Include="source\ENetwork\ESelector.cpp" />
-    <ClCompile Include="source\ENetwork\EServer.cpp" />
-    <ClCompile Include="source\ENetwork\ESocket.cpp" />
-    <ClCompile Include="source\EPrint.cpp" />
+    <ClCompile Include="source\EGlobals\EError.cpp" />
+    <ClCompile Include="source\EGlobals\EPrint.cpp" />
+    <ClCompile Include="source\ENetwork\ENetClient.cpp" />
+    <ClCompile Include="source\ENetwork\ENetPacket.cpp" />
+    <ClCompile Include="source\ENetwork\ENetPacketHandler.cpp" />
+    <ClCompile Include="source\ENetwork\ENetSelector.cpp" />
+    <ClCompile Include="source\ENetwork\ENetServer.cpp" />
+    <ClCompile Include="source\ENetwork\ENetSocket.cpp" />
     <ClCompile Include="source\ESQL\ESQL.cpp" />
     <ClCompile Include="source\ESQL\ESQLField.cpp" />
     <ClCompile Include="source\ESQL\ESQLResult.cpp" />

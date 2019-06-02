@@ -1,59 +1,65 @@
-//#pragma once
-//
-//#include "ESQL/ESQLRow.h"
-//
-//namespace                   ELib
-//{
-//
-//  class                     ESQLResult
-//  {
-//  public:
-//    ESQLResult(void *sqlres);
-//    virtual ~ESQLResult();
-//    virtual ESQLRow         *at(uint32 row);
-//    virtual ESQLRow         *operator[](uint32 row);
-//    virtual ESQLField       *at(uint32 row, uint32 column);
-//    virtual void            print() const;
-//  
-//  protected:
-//    std::vector<ESQLRow*>   m_rows;
-//    void                    *m_sqlres;
-//  };
-//
-//  class                     ESQLIndexedResult : public ESQLResult
-//  {
-//  public:
-//    ESQLIndexedResult(void *sqlres);
-//    ~ESQLIndexedResult();
-//    template <typename T>
-//    EErrorCode              rowAsObject(uint32 row, T *objectAddr)
-//    {
-//      if (alignof(T) != 1)
-//        EReturn(EERROR_WRONG_PADDING);
-//      rowAsPaddedObject(row, reinterpret_cast<char*>(objectAddr));
-//      return (EERROR_NONE);
-//    }
-//    using ESQLResult::at;
-//    virtual ESQLField       *at(uint32 row, const char *columnName);
-//    void                    print() const;
-//  
-//  private:
-//    void                    rowAsPaddedObject(uint32 row, char *objectAddr);
-//    template<typename T>
-//    void                    assignDataToObject(char *&objectAddr, ESQLField *field)
-//    {
-//      *reinterpret_cast<T*>(objectAddr) = *field;
-//      objectAddr += sizeof(T);
-//    }
-//
-//    struct                  FieldInfo
-//    {
-//      char                  *name;
-//      uint8                 type;
-//      bool                  sign;
-//    };
-//
-//    std::vector<FieldInfo>  m_columnInfos;
-//  };
-//
-//}
+/**
+  @author Elandryl (Christophe.M).
+  @date 2019.
+  @brief Header for ESQLResult.
+*/
+
+#pragma once
+
+#include "EGlobals/EGlobal.h"
+#include "ESQL/ESQLRow.h"
+
+/**
+  @brief General scope for ELib components.
+*/
+namespace                         ELib
+{
+
+  /**
+    @brief Container for ESQLField information.
+  */
+  struct                          ESQLFieldInfo
+  {
+    std::string                   m_name; /**< Name of the ESQLField. */
+    uint8                         m_type; /**< Type of the ESQLField. */
+    bool                          m_sign; /**< Indicate for numeric type if it is signed. */
+  };
+
+  /**
+    @brief ELib object for SQL result handling and container.
+    @details Handle and contain a SQL result as list of ESQLRow.
+  */
+  class                           ESQLResult
+  {
+  public:
+    ESQLResult(void *p_mysql, void *p_sqlRes);
+    virtual ~ESQLResult();
+    ESQLRow                       *at(uint32 p_row);
+    ESQLRow                       *operator[](uint32 p_row);
+    ESQLField                     *at(uint32 p_row, uint32 p_field);
+    uint32                        getSize() const;
+  
+  protected:
+    void                          *m_mysql; /**< Handle for mysql connection. */
+    std::vector<ESQLRow*>         m_rows;   /**< List of ESQLRow in the ESQLResult. */
+  };
+
+  /**
+    @brief ELib object for SQL result handling and container with indexation.
+    @details Handle and contain a SQL result as list of ESQLRow with indexation.
+    @details Indexation is done with ESQLFieldInfo structure list.
+    @details Inherit from ESQLResult.
+  */
+  class                           ESQLResultIndexed : public ESQLResult
+  {
+  public:
+    ESQLResultIndexed(void *p_mysql, void *p_sqlRes);
+    ~ESQLResultIndexed();
+    ESQLField                     *at(uint32 p_row, const std::string &p_fieldName);
+    void                          rowAsBuffer(uint32 p_row, char *p_buffer);
+
+  private:
+    std::vector<ESQLFieldInfo*>   m_fieldInfos;  /**< List of ESQLFieldInfo for indexation. */
+  };
+
+}

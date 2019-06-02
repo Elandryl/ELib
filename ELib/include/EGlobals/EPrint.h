@@ -8,7 +8,6 @@
 
 #include <map>
 #include <queue>
-#include "EGlobal.h"
 
 /**
   @brief General scope for ELib components.

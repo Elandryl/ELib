@@ -6,7 +6,8 @@
 
 #include <iostream>
 #include <conio.h>
-#include "EPrint.h"
+#include "EGlobals/EGlobal.h"
+#include "EGlobals/EPrint.h"
 
 /**
   @brief General scope for ELib components.

@@ -4,9 +4,10 @@
   @brief Source for EError handling tools.
 */
 
-#include "EError.h"
-#include <iostream>
 #include <atlstr.h>
+#include <iostream>
+#include "EGlobals/EGlobal.h"
+#include "EGlobals/EError.h"
 
 /**
   @brief General scope for ELib components.

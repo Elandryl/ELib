@@ -19,14 +19,14 @@
     <Filter Include="source\ESQL">
       <UniqueIdentifier>{99880243-9def-44a9-9ca1-14795e2a47b9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\EGlobals">
+      <UniqueIdentifier>{c047e78f-dcdc-4e17-a3a4-a21cdb616b29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\EGlobals">
+      <UniqueIdentifier>{d0876b4a-701d-4638-b9ef-195c2c2b9103}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\ENetwork\EServer.h">
-      <Filter>include\ENetwork</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ENetwork\ESocket.h">
-      <Filter>include\ENetwork</Filter>
-    </ClInclude>
     <ClInclude Include="include\ESQL\ESQL.h">
       <Filter>include\ESQL</Filter>
     </ClInclude>
@@ -39,38 +39,38 @@
     <ClInclude Include="include\ESQL\ESQLRow.h">
       <Filter>include\ESQL</Filter>
     </ClInclude>
-    <ClInclude Include="include\ENetwork\EPacket.h">
+    <ClInclude Include="include\ENetwork\ENetClient.h">
       <Filter>include\ENetwork</Filter>
     </ClInclude>
-    <ClInclude Include="include\ENetwork\EClient.h">
+    <ClInclude Include="include\ENetwork\ENetPacket.h">
       <Filter>include\ENetwork</Filter>
     </ClInclude>
-    <ClInclude Include="include\EGlobal.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\EScaledTypes.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ENetwork\EPacketHandler.h">
+    <ClInclude Include="include\ENetwork\ENetPacketHandler.h">
       <Filter>include\ENetwork</Filter>
     </ClInclude>
-    <ClInclude Include="include\ENetwork\ESelector.h">
+    <ClInclude Include="include\ENetwork\ENetSelector.h">
       <Filter>include\ENetwork</Filter>
     </ClInclude>
-    <ClInclude Include="include\EError.h">
-      <Filter>include</Filter>
+    <ClInclude Include="include\ENetwork\ENetServer.h">
+      <Filter>include\ENetwork</Filter>
     </ClInclude>
-    <ClInclude Include="include\EPrint.h">
-      <Filter>include</Filter>
+    <ClInclude Include="include\ENetwork\ENetSocket.h">
+      <Filter>include\ENetwork</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EGlobals\EError.h">
+      <Filter>include\EGlobals</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EGlobals\EGlobal.h">
+      <Filter>include\EGlobals</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EGlobals\EPrint.h">
+      <Filter>include\EGlobals</Filter>
+    </ClInclude>
+    <ClInclude Include="include\EGlobals\EScaledTypes.h">
+      <Filter>include\EGlobals</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\ENetwork\EServer.cpp">
-      <Filter>source\ENetwork</Filter>
-    </ClCompile>
-    <ClCompile Include="source\ENetwork\ESocket.cpp">
-      <Filter>source\ENetwork</Filter>
-    </ClCompile>
     <ClCompile Include="source\ESQL\ESQL.cpp">
       <Filter>source\ESQL</Filter>
     </ClCompile>
@@ -83,23 +83,29 @@
     <ClCompile Include="source\ESQL\ESQLRow.cpp">
       <Filter>source\ESQL</Filter>
     </ClCompile>
-    <ClCompile Include="source\ENetwork\EClient.cpp">
+    <ClCompile Include="source\EGlobals\EError.cpp">
+      <Filter>source\EGlobals</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EGlobals\EPrint.cpp">
+      <Filter>source\EGlobals</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ENetwork\ENetSocket.cpp">
       <Filter>source\ENetwork</Filter>
     </ClCompile>
-    <ClCompile Include="source\ENetwork\EPacket.cpp">
+    <ClCompile Include="source\ENetwork\ENetServer.cpp">
       <Filter>source\ENetwork</Filter>
     </ClCompile>
-    <ClCompile Include="source\ENetwork\EPacketHandler.cpp">
+    <ClCompile Include="source\ENetwork\ENetSelector.cpp">
       <Filter>source\ENetwork</Filter>
     </ClCompile>
-    <ClCompile Include="source\ENetwork\ESelector.cpp">
+    <ClCompile Include="source\ENetwork\ENetPacketHandler.cpp">
       <Filter>source\ENetwork</Filter>
     </ClCompile>
-    <ClCompile Include="source\EError.cpp">
-      <Filter>source</Filter>
+    <ClCompile Include="source\ENetwork\ENetPacket.cpp">
+      <Filter>source\ENetwork</Filter>
     </ClCompile>
-    <ClCompile Include="source\EPrint.cpp">
-      <Filter>source</Filter>
+    <ClCompile Include="source\ENetwork\ENetClient.cpp">
+      <Filter>source\ENetwork</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

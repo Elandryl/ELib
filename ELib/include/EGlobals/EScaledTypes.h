@@ -1,3 +1,10 @@
+/**
+  @author Elandryl (Christophe.M).
+  @date 2019.
+  @brief Header for EScaledTypes.
+  @details Define integer types to be used by ELib.
+*/
+
 #pragma once
 
 #include <stdint.h>
