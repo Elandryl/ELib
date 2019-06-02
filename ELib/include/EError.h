@@ -130,6 +130,7 @@ namespace               ELib
 
 }
 
+#define mEERROR         (ELib::__gELastEError.m_errorCode)
 #define mEERROR_G       (ELib::__gELastEError)
 
 #define mEERROR_R()                                   \
@@ -139,7 +140,7 @@ namespace               ELib
 
 #define mEERROR_S(p_errorCode)                        \
 {                                                     \
-  mEERROR_G.m_errorCode = p_errorCode;                \
+  mEERROR = p_errorCode;                \
   mEERROR_G.m_functionName = __FUNCTION__;            \
   mEERROR_G.m_fileName = __FILE__;                    \
   mEERROR_G.m_lineNumber = __LINE__;                  \

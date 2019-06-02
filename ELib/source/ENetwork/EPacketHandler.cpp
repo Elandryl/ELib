@@ -108,13 +108,13 @@ namespace                 ELib
       mEERROR_S(EERROR_SOCKET_INVALID);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       int32               l_len = 0;
       EPacketType         l_type = EPACKET_TYPE_DISCONNECT;
 
       l_len = p_src->recv(reinterpret_cast<char*>(&l_type), sizeof(EPacketType));
-      if (EERROR_NONE == mEERROR_G.m_errorCode)
+      if (EERROR_NONE == mEERROR)
       {
         if ((sizeof(EPacketType) == l_len)
           || (0 == l_len))
@@ -127,7 +127,7 @@ namespace                 ELib
             if (nullptr != l_packet)
             {
               l_packet->recv();
-              if (EERROR_NONE == mEERROR_G.m_errorCode)
+              if (EERROR_NONE == mEERROR)
               {
                 WaitForSingleObject(m_mutexPackets, INFINITE);
                 m_packets.push(l_packet);
@@ -184,7 +184,7 @@ namespace                 ELib
       mEERROR_S(EERROR_PACKET_TRUNCATED);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       if ((sizeof(EPacketType) <= p_len)
         || (0 == p_len))
@@ -203,7 +203,7 @@ namespace                 ELib
           if (nullptr != l_packet)
           {
             l_packet->generate(p_datas + sizeof(EPacketType), p_len - sizeof(EPacketType));
-            if (EERROR_NONE == mEERROR_G.m_errorCode)
+            if (EERROR_NONE == mEERROR)
             {
               l_packet->setSource(p_src);
               WaitForSingleObject(m_mutexPackets, INFINITE);
@@ -249,7 +249,7 @@ namespace                 ELib
       mEERROR_S(EERROR_PACKET_RESERVED);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       m_generators[type] = generator;
     }

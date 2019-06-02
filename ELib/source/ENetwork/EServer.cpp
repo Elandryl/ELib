@@ -82,16 +82,16 @@ namespace                         ELib
       mEERROR_S(EERROR_SERVER_RUNNING);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       m_socketAccept.socket(ESOCKET_FLAGS_PROTOCOL_TCP);
-      if (EERROR_NONE == mEERROR_G.m_errorCode)
+      if (EERROR_NONE == mEERROR)
       {
         m_socketAccept.bind(p_hostname, p_port);
-        if (EERROR_NONE == mEERROR_G.m_errorCode)
+        if (EERROR_NONE == mEERROR)
         {
           m_socketAccept.listen();
-          if (EERROR_NONE == mEERROR_G.m_errorCode)
+          if (EERROR_NONE == mEERROR)
           {
             mEPRINT_STD("EServer successfully connected to " + p_hostname + ":" + std::to_string(p_port));
           }
@@ -129,7 +129,7 @@ namespace                         ELib
       for (std::vector<ESelector*>::iterator l_it = m_selectors.begin(); l_it != m_selectors.end(); ++l_it)
       {
         (*l_it)->start();
-        if (EERROR_NONE != mEERROR_G.m_errorCode)
+        if (EERROR_NONE != mEERROR)
         {
           mEERROR_SA(EERROR_SERVER_START, mEERROR_G.toString());
         }
@@ -158,7 +158,7 @@ namespace                         ELib
       for (std::vector<ESelector*>::iterator l_it = m_selectors.begin(); l_it != m_selectors.end(); ++l_it)
       {
         (*l_it)->stop();
-        if (EERROR_NONE != mEERROR_G.m_errorCode)
+        if (EERROR_NONE != mEERROR)
         {
           mEERROR_SA(EERROR_SERVER_STOP, mEERROR_G.toString());
         }
@@ -183,7 +183,7 @@ namespace                         ELib
       if (nullptr != l_client)
       {
         addClient(l_client);
-        if (EERROR_NONE != mEERROR_G.m_errorCode)
+        if (EERROR_NONE != mEERROR)
         {
           mEPRINT_ERR("Failed to connect EClient" + std::to_string(*l_client));
           delete (l_client);
@@ -211,7 +211,7 @@ namespace                         ELib
       mEERROR_S(EERROR_SOCKET_INVALID);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       WaitForSingleObject(m_mutexSelectors, INFINITE);
       clearSelectors();
@@ -220,14 +220,14 @@ namespace                         ELib
         if (false == l_added)
         {
           l_added = (*l_it)->addClient(p_client);
-          if (EERROR_NONE != mEERROR_G.m_errorCode)
+          if (EERROR_NONE != mEERROR)
           {
             mEERROR_SA(EERROR_SERVER_ADD, mEERROR_G.toString());
           }
         }
       }
       ReleaseMutex(m_mutexSelectors);
-      if ((EERROR_NONE == mEERROR_G.m_errorCode)
+      if ((EERROR_NONE == mEERROR)
         && (false == l_added))
       {
         ESelector           *l_selector = nullptr;
@@ -236,7 +236,7 @@ namespace                         ELib
         if (nullptr != l_selector)
         {
           l_selector->start();
-          if (EERROR_NONE == mEERROR_G.m_errorCode)
+          if (EERROR_NONE == mEERROR)
           {
             WaitForSingleObject(m_mutexSelectors, INFINITE);
             m_selectors.push_back(l_selector);
@@ -272,7 +272,7 @@ namespace                         ELib
       mEERROR_S(EERROR_PACKET_INVALID);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       WaitForSingleObject(m_mutexSelectors, INFINITE);
       for (std::vector<ESelector*>::iterator l_it = m_selectors.begin(); l_it != m_selectors.end(); ++l_it)

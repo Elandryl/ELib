@@ -62,7 +62,7 @@ namespace             ELib
       mEERROR_S(EERROR_SOCKET_PROTOCOL);
     }
     
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       switch (p_protocol)
       {
@@ -107,7 +107,7 @@ namespace             ELib
       mEERROR_S(EERROR_SOCKET_STATE);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       SOCKADDR_IN     l_infos = { 0 };
 
@@ -148,7 +148,7 @@ namespace             ELib
       mEERROR_S(EERROR_SOCKET_PROTOCOL);
     }
     
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       if (SOCKET_ERROR != ::listen(m_socket, MAX_CLIENTS))
       {
@@ -185,7 +185,7 @@ namespace             ELib
       mEERROR_S(EERROR_SOCKET_PROTOCOL);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       l_client = new ESocket();
       if (nullptr != l_client)
@@ -238,7 +238,7 @@ namespace             ELib
       mEERROR_S(EERROR_SOCKET_PROTOCOL);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       SOCKADDR_IN     l_infos = { 0 };
 
@@ -285,7 +285,7 @@ namespace             ELib
         mEERROR_S(EERROR_SOCKET_RECV);
       }
 
-      if (EERROR_NONE == mEERROR_G.m_errorCode)
+      if (EERROR_NONE == mEERROR)
       {
         l_len = ::recv(m_socket, p_datas, p_len, 0);
         if (SOCKET_ERROR != l_len)
@@ -344,7 +344,7 @@ namespace             ELib
         mEERROR_S(EERROR_SOCKET_RECVFROM);
       }
 
-      if (EERROR_NONE == mEERROR_G.m_errorCode)
+      if (EERROR_NONE == mEERROR)
       {
         SOCKADDR_IN     l_infos = { 0 };
 
@@ -393,7 +393,7 @@ namespace             ELib
       mEERROR_S(EERROR_SOCKET_SEND);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       l_len = ::send(m_socket, p_datas, p_len, 0);
       if (SOCKET_ERROR == l_len)
@@ -437,7 +437,7 @@ namespace             ELib
       mEERROR_S(EERROR_SOCKET_SENDTO);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       SOCKADDR_IN     l_infos = { 0 };
 
@@ -470,7 +470,7 @@ namespace             ELib
       mEERROR_S(EERROR_SOCKET_STATE);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       if (SOCKET_ERROR == ::shutdown(m_socket, p_service))
       {
@@ -494,7 +494,7 @@ namespace             ELib
       mEERROR_S(EERROR_SOCKET_STATE);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       if (SOCKET_ERROR == ::closesocket(m_socket))
       {

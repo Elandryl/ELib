@@ -1,9 +1,9 @@
 #include <iostream>
-#include <ENetwork\EClient.h>
+#include <ENetwork\EServer.h>
 
 enum                          CustomPacketType
 {
-  CUSTOM_PACKET_TYPE_CHAT     = ELib::EPACKET_TYPE_RESERVED + 1
+  CUSTOM_PACKET_TYPE_CHAT = ELib::EPACKET_TYPE_RESERVED + 1
 };
 
 class                         CustomPacketChat : public ELib::EPacket
@@ -88,15 +88,15 @@ ELib::EPacket                 *generatePacketChat(ELib::ESocket *p_src)
   return (new CustomPacketChat(p_src));
 }
 
-DWORD WINAPI                  recvPackets(LPVOID p_param)
+DWORD WINAPI              recvPackets(LPVOID p_param)
 {
-  ELib::EClient               *l_client = static_cast<ELib::EClient*>(p_param);
+  ELib::EServer           *l_server = reinterpret_cast<ELib::EServer*>(p_param);
 
-  while (true == l_client->isRunning())
+  while (true == l_server->isRunning())
   {
-    ELib::EPacket             *l_packet = nullptr;
+    ELib::EPacket         *l_packet = nullptr;
 
-    l_packet = l_client->getPacketHandler().getPacket();
+    l_packet = l_server->getPacketHandler().getPacket();
     if (nullptr != l_packet)
     {
       switch (l_packet->getType())
@@ -124,43 +124,41 @@ DWORD WINAPI                  recvPackets(LPVOID p_param)
         default:
           break;
       }
+      l_server->broadcast(l_packet);
       delete (l_packet);
     }
   }
-  mEPRINT_ERR("EServer disconnected");
+
   return (0);
 }
 
-int                           main()
+int	                      main()
 {
   try
   {
-    ELib::EClient             l_client;
+    ELib::EServer         l_server;
 
     mEPRINT_G.start();
-    l_client.init("192.168.1.50", 2222);
-    l_client.getPacketHandler().setGenerator(static_cast<ELib::EPacketType>(CUSTOM_PACKET_TYPE_CHAT), generatePacketChat);
-    if (ELib::EERROR_NONE == mEERROR_G.m_errorCode)
+    l_server.init("192.168.1.50", 2222);
+    if (ELib::EERROR_NONE == mEERROR)
     {
-      l_client.start();
-      CreateThread(nullptr, 0, recvPackets, &l_client, 0, nullptr);
-
-      CustomPacketChat        *l_packet = new CustomPacketChat();
-      ELib::EPacket           *l_disconnect = new ELib::EPacketDisconnect();
-      std::string             l_in;
-
-      mEPRINT_TYPE(ELib::EPRINT_TYPE_SPECIAL_ACTIVE, "Enter your login: ");
-      l_in = mEPRINT_G.getLine();
-      l_packet->setLogin(l_in);
-      while (true == l_client.isRunning())
+      l_server.getPacketHandler().setGenerator(static_cast<ELib::EPacketType>(CUSTOM_PACKET_TYPE_CHAT), generatePacketChat);
+      l_server.start();
+      if (ELib::EERROR_NONE == mEERROR)
       {
-        mEPRINT_TYPE(ELib::EPRINT_TYPE_SPECIAL_ACTIVE, "Message: ");
-        l_in = mEPRINT_G.getLine();
-        mEPRINT_TYPE(ELib::EPRINT_TYPE_SPECIAL_ACTIVE, "");
-        l_packet->setMessage(l_in);
-        l_client.sendPacket(l_packet);
+        for (int i = 0; i < 1; ++i)
+        {
+          CreateThread(nullptr, 0, recvPackets, &l_server, 0, nullptr);
+        }
+        while (true == l_server.isRunning())
+        {
+          Sleep(50);
+        }
       }
-      l_client.sendPacket(l_disconnect);
+      else
+      {
+        mETHROW();
+      }
     }
     else
     {

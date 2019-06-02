@@ -78,7 +78,7 @@ namespace                   ELib
       mEERROR_S(EERROR_SELECTOR_EMPTY);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       m_threadSelect = CreateThread(nullptr, 0, SelectFunctor, this, 0, nullptr);
       m_isRunning = true;
@@ -132,7 +132,7 @@ namespace                   ELib
           if (0 != FD_ISSET(**l_it, &l_set))
           {
             m_packetHandler.recvPacket(*l_it);
-            if (EERROR_NONE != mEERROR_G.m_errorCode)
+            if (EERROR_NONE != mEERROR)
             {
               EPacketType   l_type = EPACKET_TYPE_DISCONNECT;
 
@@ -187,7 +187,7 @@ namespace                   ELib
       mEERROR_S(EERROR_SOCKET_INVALID);
     }
 
-    if ((EERROR_NONE == mEERROR_G.m_errorCode)
+    if ((EERROR_NONE == mEERROR)
       && (MAX_CLIENTS > m_socketClients.size()))
     {
       WaitForSingleObject(m_mutexClients, INFINITE);
@@ -220,7 +220,7 @@ namespace                   ELib
       mEERROR_S(EERROR_PACKET_INVALID);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       WaitForSingleObject(m_mutexClients, INFINITE);
       for (std::vector<ESocket*>::iterator l_it = m_socketClients.begin(); l_it != m_socketClients.end(); ++l_it)

@@ -72,13 +72,13 @@ namespace           ELib
       mEERROR_S(EERROR_CLIENT_RUNNING);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       m_socketServer.socket(ESOCKET_FLAGS_PROTOCOL_TCP);
-      if (EERROR_NONE == mEERROR_G.m_errorCode)
+      if (EERROR_NONE == mEERROR)
       {
         m_socketServer.connect(p_hostname, p_port);
-        if (EERROR_NONE == mEERROR_G.m_errorCode)
+        if (EERROR_NONE == mEERROR)
         {
           mEPRINT_STD("EClient successfully connected to EServer at " + p_hostname + ":" + std::to_string(p_port));
         }
@@ -136,7 +136,7 @@ namespace           ELib
       mEERROR_R();
 
       m_packetHandler.recvPacket(&m_socketServer);
-      if (EERROR_NONE != mEERROR_G.m_errorCode)
+      if (EERROR_NONE != mEERROR)
       {
         m_socketServer.close();
         stop();
@@ -156,7 +156,7 @@ namespace           ELib
     mEERROR_R();
     p_packet->setSource(&m_socketServer);
     p_packet->send();
-    if (EERROR_NONE != mEERROR_G.m_errorCode)
+    if (EERROR_NONE != mEERROR)
     {
       mEERROR_SA(EERROR_SELECTOR_SEND, mEERROR_G.toString());
     }

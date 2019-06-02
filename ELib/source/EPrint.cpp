@@ -69,7 +69,9 @@ namespace         ELib
     if (1 < p_messages.size())
     {
       p_messages.pop();
+      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x02);
       std::cout << p_messages.front();
+      SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
     }
   }
 
@@ -141,8 +143,6 @@ namespace         ELib
   {
     while (true == m_isRunning)
     {
-      bool        l_printed = false;
-
       WaitForSingleObject(m_mutexPrinter, INFINITE);
       for (std::map<EPrintType, ESpecialPrinter>::iterator l_it = m_specialPrePrinters.begin(); l_it != m_specialPrePrinters.end(); ++l_it)
       {
@@ -154,21 +154,23 @@ namespace         ELib
       }
       for (std::map<EPrintType, std::queue<std::string> >::iterator l_it = m_priorityMessages.begin(); l_it != m_priorityMessages.end(); ++l_it)
       {
-        if ((false == l_printed)
-          && (false == l_it->second.empty())
-          && (EPRINT_TYPE_PRIORITY_HIGHEST < l_it->first)
+        if ((EPRINT_TYPE_PRIORITY_HIGHEST < l_it->first)
           && (EPRINT_TYPE_PRIORITY_LOWEST > l_it->first))
         {
-          if (EPRINT_TYPE_PRIORITY_ERROR >= l_it->first)
+          while (false == l_it->second.empty())
           {
-            std::cerr << l_it->second.front().c_str() << std::endl;
+            if (EPRINT_TYPE_PRIORITY_ERROR >= l_it->first)
+            {
+              SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x04);
+              std::cerr << l_it->second.front().c_str() << std::endl;
+              SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
+            }
+            else
+            {
+              std::cout << l_it->second.front().c_str() << std::endl;
+            }
+            l_it->second.pop();
           }
-          else
-          {
-            std::cout << l_it->second.front().c_str() << std::endl;
-          }
-          l_it->second.pop();
-          l_printed = true;
         }
       }
       for (std::map<EPrintType, ESpecialPrinter>::iterator l_it = m_specialPostPrinters.begin(); l_it != m_specialPostPrinters.end(); ++l_it)
@@ -239,32 +241,37 @@ namespace         ELib
     std::string   l_line = "";
     char          l_cin = 0;
 
-    l_cin = _getch();
-    while ('\r' != l_cin)
+    if (true == m_isRunning)
     {
-      if ('\b' != l_cin)
+      l_cin = _getch();
+      while ('\r' != l_cin)
       {
-        std::cout << l_cin;
-        l_line += l_cin;
-        if (false == m_specialMessages[EPRINT_TYPE_SPECIAL_ACTIVE].empty())
+        WaitForSingleObject(m_mutexPrinter, INFINITE);
+        if ('\b' != l_cin)
         {
-          m_specialMessages[EPRINT_TYPE_SPECIAL_ACTIVE].front() += l_cin;
+          std::cout << l_cin;
+          l_line += l_cin;
+          if (false == m_specialMessages[EPRINT_TYPE_SPECIAL_ACTIVE].empty())
+          {
+            m_specialMessages[EPRINT_TYPE_SPECIAL_ACTIVE].front() += l_cin;
+          }
+          else
+          {
+            m_specialProcPrinters[EPRINT_TYPE_SPECIAL_ACTIVE](EPRINT_TYPE_SPECIAL_ACTIVE, l_line, m_specialMessages[EPRINT_TYPE_SPECIAL_ACTIVE]);
+          }
         }
         else
         {
-          m_specialProcPrinters[EPRINT_TYPE_SPECIAL_ACTIVE](EPRINT_TYPE_SPECIAL_ACTIVE, l_line, m_specialMessages[EPRINT_TYPE_SPECIAL_ACTIVE]);
+          if (0 < l_line.size())
+          {
+            l_line.erase(l_line.size() - 1);
+            m_specialMessages[EPRINT_TYPE_SPECIAL_ACTIVE].front().erase(m_specialMessages[EPRINT_TYPE_SPECIAL_ACTIVE].front().size() - 1);
+            std::cout << "\b \b";
+          }
         }
+        ReleaseMutex(m_mutexPrinter);
+        l_cin = _getch();
       }
-      else
-      {
-        if (0 < l_line.size())
-        {
-          l_line.erase(l_line.size() - 1);
-          m_specialMessages[EPRINT_TYPE_SPECIAL_ACTIVE].front().erase(m_specialMessages[EPRINT_TYPE_SPECIAL_ACTIVE].front().size() - 1);
-          std::cout << "\b \b";
-        }
-      }
-      l_cin = _getch();
     }
     
     return (l_line);

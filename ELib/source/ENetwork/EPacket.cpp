@@ -55,7 +55,7 @@ namespace         ELib
       mEERROR_S(EERROR_SOCKET_INVALID);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       char        *l_datas = nullptr;
       int32       l_len = -1;
@@ -82,7 +82,7 @@ namespace         ELib
             l_ret = m_src->sendto(l_datas, l_len, p_dst);
           }
         }
-        if (EERROR_NONE == mEERROR_G.m_errorCode)
+        if (EERROR_NONE == mEERROR)
         {
           if (l_ret < l_len)
           {
@@ -274,12 +274,12 @@ namespace         ELib
       mEERROR_S(EERROR_SOCKET_INVALID);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       int32       l_len = -1;
 
       l_len = m_src->recv(reinterpret_cast<char*>(&m_len), sizeof(int32));
-      if (EERROR_NONE == mEERROR_G.m_errorCode)
+      if (EERROR_NONE == mEERROR)
       {
         if (sizeof(int32) == l_len)
         {
@@ -287,7 +287,7 @@ namespace         ELib
           if (nullptr != m_datas)
           {
             l_len = m_src->recv(m_datas, m_len);
-            if (EERROR_NONE == mEERROR_G.m_errorCode)
+            if (EERROR_NONE == mEERROR)
             {
               if (m_len > l_len)
               {
@@ -298,7 +298,7 @@ namespace         ELib
             {
               mEERROR_SA(EERROR_PACKET_RECV, mEERROR_G.toString());
             }
-            if (EERROR_NONE != mEERROR_G.m_errorCode)
+            if (EERROR_NONE != mEERROR)
             {
               m_len = 0;
               delete (m_datas);
@@ -392,7 +392,7 @@ namespace         ELib
       mEERROR_S(EERROR_OOM);
     }
 
-    if (EERROR_NONE == mEERROR_G.m_errorCode)
+    if (EERROR_NONE == mEERROR)
     {
       EPacket::send(m_datas, m_len, p_dst);
     }
