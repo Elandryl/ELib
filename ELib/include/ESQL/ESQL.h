@@ -28,6 +28,7 @@ namespace         ELib
                     const std::string &p_password, const std::string &p_database);
     void          query(const std::string &p_query);
     ESQLResult    *getResult(bool p_indexed = false);
+    void          close();
   
   private:
     void          *m_mysql;       /**< Handle for mysql connection. */

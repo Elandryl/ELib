@@ -38,10 +38,12 @@ namespace                         ELib
     ESQLRow                       *operator[](uint32 p_row);
     ESQLField                     *at(uint32 p_row, uint32 p_field);
     uint32                        getSize() const;
+    void                          print() const;
   
   protected:
-    void                          *m_mysql; /**< Handle for mysql connection. */
-    std::vector<ESQLRow*>         m_rows;   /**< List of ESQLRow in the ESQLResult. */
+    void                          *m_mysql;   /**< Handle for mysql connection. */
+    void                          *m_sqlRes;  /**< ESQLResult as mysql datas. */
+    std::vector<ESQLRow*>         m_rows;     /**< List of ESQLRow in the ESQLResult. */
   };
 
   /**

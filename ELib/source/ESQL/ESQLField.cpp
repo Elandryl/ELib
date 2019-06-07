@@ -285,7 +285,7 @@ namespace               ELib
     @eerror EERROR_SUCCESS in success.
     @eerror EERROR_SQL_FIELD_INVALID if p_datas is null.
   */
-  ESQLField::operator   std::string() const
+  ESQLField::operator   const std::string() const
   {
     std::string         l_ret = "";
 

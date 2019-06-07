@@ -23,8 +23,8 @@ namespace               ELib
   class                 ENetClient
   {
   public:
-    ENetClient();
     ~ENetClient();
+    static ENetClient   *getInstance();
     void                init(const std::string &p_hostname, uint16 p_port);
     void                start();
     void                stop();
@@ -34,6 +34,8 @@ namespace               ELib
     bool                isRunning();
 
   private:
+    ENetClient();
+
     ENetSocket          m_socketServer;     /**< ENetSocket for communication to ENetServer. */
     HANDLE              m_threadRecvPacket; /**< Handle for recvPacket thread. */
     ENetPacketHandler   m_packetHandler;    /**< ENetPacketHandlet that contains the received ENetPackets. */

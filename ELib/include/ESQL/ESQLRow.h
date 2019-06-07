@@ -29,6 +29,7 @@ namespace                     ELib
     void                      push(ESQLField *p_field);
     ESQLField                 *at(uint32 p_field);
     ESQLField                 *operator[](uint32 p_field);
+    uint32                    getSize() const;
     char                      **toCharArray();
   
   private:

@@ -129,6 +129,15 @@ namespace       ELib
   {
     return (at(p_field));
   }
+
+  /**
+    @brief Retrieve the number of ESQLField in ESQLRow.
+    @return Number of ESQLField in ESQLRow.
+  */
+  uint32        ESQLRow::getSize() const
+  {
+    return (static_cast<uint32>(m_fields.size()));
+  }
   
   /**
     @brief Retrieve every ESQLFields as an array of buffers.

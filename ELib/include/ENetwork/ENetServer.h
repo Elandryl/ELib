@@ -24,8 +24,8 @@ namespace                       ELib
   class                         ENetServer
   {
   public:
-    ENetServer();
     ~ENetServer();
+    static ENetServer           *getInstance();
     void                        init(const std::string &p_hostname, uint16 p_port);
     void                        start();
     void                        stop();
@@ -38,9 +38,11 @@ namespace                       ELib
     const std::string           toString() const;
 
   private:
+    ENetServer();
+
     ENetSocket                  m_socketAccept;   /**< ENetSocket for accept incoming connection. */
-    std::vector<ENetSelector*>  m_selectors;      /**< List of ENetSelector that contains and handles the ENetSocket clients. */
     HANDLE                      m_threadAccept;   /**< Handle for accept thread. */
+    std::vector<ENetSelector*>  m_selectors;      /**< List of ENetSelector that contains and handles the ENetSocket clients. */
     HANDLE                      m_mutexSelectors; /**< Semaphore for m_selectors thread safety. */
     ENetPacketHandler           m_packetHandler;  /**< ENetPacketHandler that contains the received ENetPackets. */
     bool                        m_isRunning;      /**< Indicate if ENetServer is running. */

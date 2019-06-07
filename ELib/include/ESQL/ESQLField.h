@@ -31,7 +31,7 @@ namespace       ELib
     operator    int16() const;
     operator    int8() const;
     operator    char*() const;
-    operator    std::string() const;
+    operator    const std::string() const;
     operator    float() const;
     operator    double() const;
     operator    bool() const;

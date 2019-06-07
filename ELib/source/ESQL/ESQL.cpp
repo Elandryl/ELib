@@ -15,19 +15,12 @@ namespace       ELib
 
   /**
     @brief Instantiate a ESQL object for ELib SQL handling.
-    @details Call mysql_init.
     @ethrow EERROR_SQL_MYSQL_EERROR if mysql_init fail.
   */
   ESQL::ESQL() :
     m_mysql(nullptr),
-    m_isConnected(true)
+    m_isConnected(false)
   {
-    mEERROR_R();
-    m_mysql = mysql_init(nullptr);
-    if (nullptr == m_mysql)
-    {
-      mETHROW_S(EERROR_SQL_MYSQL_ERROR);
-    }
   }
   
   /**
@@ -51,19 +44,20 @@ namespace       ELib
     @param p_password Password for account to be used.
     @param p_database Name of database to connect.
     @eerror EERROR_NONE in success.
-    @eerror EERROR_SQL_MYSQL_ERROR if mysql_real_connect fail.
+    @eerror EERROR_SQL_MYSQL_ERROR if mysql_init or mysql_real_connect fail.
   */
   void          ESQL::connect(const std::string &p_hostname, uint16 port, const std::string &p_user,
                   const std::string &p_password, const std::string &p_database)
   {
     mEERROR_R();
-    if (EERROR_NONE == mEERROR)
+    m_mysql = mysql_init(nullptr);
+    if (nullptr != m_mysql)
     {
       MYSQL     *l_mysql = nullptr;
 
       l_mysql = mysql_real_connect(reinterpret_cast<MYSQL*>(m_mysql), p_hostname.c_str(),
         p_user.c_str(), p_password.c_str(), p_database.c_str(), port, nullptr, 0);
-      if (nullptr != m_mysql)
+      if (nullptr != l_mysql)
       {
         m_isConnected = true;
       }
@@ -71,6 +65,10 @@ namespace       ELib
       {
         mEERROR_SA(EERROR_SQL_MYSQL_ERROR, mysql_error(reinterpret_cast<MYSQL*>(m_mysql)));
       }
+    }
+    else
+    {
+      mEERROR_SA(EERROR_SQL_MYSQL_ERROR, mysql_error(reinterpret_cast<MYSQL*>(m_mysql)));
     }
   }
   
@@ -94,7 +92,7 @@ namespace       ELib
     {
       int32     l_ret = -1;
 
-      l_ret = mysql_real_query(reinterpret_cast<MYSQL*>(m_mysql), p_query.c_str(), p_query.size());
+      l_ret = mysql_real_query(reinterpret_cast<MYSQL*>(m_mysql), p_query.c_str(), static_cast<unsigned long>(p_query.size()));
       if (0 != l_ret)
       {
         mEERROR_SA(EERROR_SQL_MYSQL_ERROR, mysql_error(reinterpret_cast<MYSQL*>(m_mysql)));
@@ -132,11 +130,11 @@ namespace       ELib
       {
         if (true == p_indexed)
         {
-          l_result = new ESQLResult(m_mysql, l_sqlRes);
+          l_result = new ESQLResultIndexed(m_mysql, l_sqlRes);
         }
         else
         {
-          l_result = new ESQLResultIndexed(m_mysql, l_sqlRes);
+          l_result = new ESQLResult(m_mysql, l_sqlRes);
         }
         if (EERROR_NONE != mEERROR)
         {
@@ -157,6 +155,18 @@ namespace       ELib
     }
 
     return (l_result);
+  }
+
+  /**
+    @brief Close a ESQL connection.
+  */
+  void          ESQL::close()
+  {
+    if (nullptr != m_mysql)
+    {
+      mysql_close(reinterpret_cast<MYSQL*>(m_mysql));
+      m_isConnected = false;
+    }
   }
 
 }

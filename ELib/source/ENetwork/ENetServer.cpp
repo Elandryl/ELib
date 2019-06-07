@@ -9,40 +9,32 @@
 /**
   @brief General scope for ELib components.
 */
-namespace             ELib
+namespace               ELib
 {
 
   /**
     @brief Functor for accept thread.
-    @param p_param Pointer to param from CreateThread caller.
+    @param p_unused Unused.
     @return Unused.
   */
-  DWORD WINAPI        AcceptFunctor(LPVOID p_param)
+  DWORD WINAPI          AcceptFunctor(LPVOID p_unused)
   {
-    static_cast<ENetServer*>(p_param)->accept();
+    ENetServer::getInstance()->accept();
     return (0);
   }
   
   /**
-    @brief Instantiate a ENetServer.
-    @details Initialize WSA and its mutex.
-    @details It should be unique in an application.
-    @ethrow EERROR_NET_WSA_STARTUP if WSAStartup() fail.
+    @brief Singleton: Instantiate a ENetServer.
+    @details Initialize its mutex.
   */
   ENetServer::ENetServer() :
     m_socketAccept(),
-    m_selectors({}),
     m_threadAccept(nullptr),
+    m_selectors({}),
     m_mutexSelectors(nullptr),
     m_packetHandler(),
     m_isRunning(false)
   {
-    WSADATA           WSAData = { 0 };
-    
-    if (0 != WSAStartup(MAKEWORD(2, 2), &WSAData))
-    {
-      mETHROW_S(EERROR_NET_WSA_STARTUP);
-    }
     m_mutexSelectors = CreateMutex(nullptr, false, nullptr);
   }
   
@@ -66,6 +58,30 @@ namespace             ELib
   }
 
   /**
+    @brief Retrieve Singleton of ENetServer.
+    @details Call WSAStartup at first call.
+    @return Unique instance of ENetServer.
+    @eerror EERROR_NET_WSA_STARTUP if WSAStartup() fail.
+  */
+  ENetServer            *ENetServer::getInstance()
+  {
+    static ENetServer   *l_instance = nullptr;
+
+    if (nullptr == l_instance)
+    {
+      WSADATA           WSAData = { 0 };
+
+      if (0 != WSAStartup(MAKEWORD(2, 2), &WSAData))
+      {
+        mEERROR_S(EERROR_NET_WSA_STARTUP);
+      }
+      l_instance = new ENetServer();
+    }
+
+    return (l_instance);
+  }
+
+  /**
     @brief Initialize the ENetServer.
     @details Prepare the ENetSocket accept to receive incoming connection on specific hostname.
     @param p_hostname Internet host address in number-and-dots notation.
@@ -74,7 +90,7 @@ namespace             ELib
     @eerror EERROR_NET_SERVER_RUNNING if ENetServer is already running.
     @eerror EERROR_NET_SERVER_INIT if socket(), bind() or listen() failed.
   */
-  void                ENetServer::init(const std::string &p_hostname, uint16 p_port)
+  void                  ENetServer::init(const std::string &p_hostname, uint16 p_port)
   {
     mEERROR_R();
     if (true == isRunning())
@@ -119,7 +135,7 @@ namespace             ELib
     @eerror EERROR_NONE in success.
     @eerror EERROR_NET_SERVER_START if start() fail.
   */
-  void                ENetServer::start()
+  void                  ENetServer::start()
   {
     mEERROR_R();
     if (false == isRunning())
@@ -135,7 +151,7 @@ namespace             ELib
         }
       }
       ReleaseMutex(m_mutexSelectors);
-      m_threadAccept = CreateThread(nullptr, 0, AcceptFunctor, this, 0, nullptr);
+      m_threadAccept = CreateThread(nullptr, 0, AcceptFunctor, nullptr, 0, nullptr);
       m_isRunning = true;
       mEPRINT_STD("ENetServer started");
     }
@@ -147,7 +163,7 @@ namespace             ELib
     @eerror EERROR_NONE in success.
     @eerror EERROR_NET_SERVER_STOP if stop() fail.
   */
-  void                ENetServer::stop()
+  void                  ENetServer::stop()
   {
     mEERROR_R();
     if (true == isRunning())
@@ -173,11 +189,11 @@ namespace             ELib
     @details Accept incoming connection to the ENetServer and add the ENetSocket created to a ENetSelector handling.
     @details Automatically delete empty and not running ENetSelector at each new connection.
   */
-  void                ENetServer::accept()
+  void                  ENetServer::accept()
   {
     while (true == isRunning())
     {
-      ENetSocket      *l_client = nullptr;
+      ENetSocket        *l_client = nullptr;
 
       l_client = m_socketAccept.accept();
       if (nullptr != l_client)
@@ -205,9 +221,9 @@ namespace             ELib
     @eerror EERROR_NET_SOCKET_INVALID is p_client is null.
     @eerror EERROR_NET_SERVER_ADD if p_client couldn't be add or a newly created ENetSelector couldn't be start.
   */
-  void                ENetServer::addClient(ENetSocket *p_client)
+  void                  ENetServer::addClient(ENetSocket *p_client)
   {
-    bool              l_added = false;
+    bool                l_added = false;
 
     mEERROR_R();
     if (nullptr == p_client)
@@ -234,7 +250,7 @@ namespace             ELib
       if ((EERROR_NONE == mEERROR)
         && (false == l_added))
       {
-        ENetSelector  *l_selector = nullptr;
+        ENetSelector    *l_selector = nullptr;
 
         l_selector = new ENetSelector(m_packetHandler, p_client);
         if (nullptr != l_selector)
@@ -269,7 +285,7 @@ namespace             ELib
     @eerror EERROR_NONE in success.
     @eerror EERROR_NULL_PTR is p_packet is null.
   */
-  void                ENetServer::broadcast(ENetPacket *p_packet)
+  void                  ENetServer::broadcast(ENetPacket *p_packet)
   {
     if (nullptr == p_packet)
     {
@@ -291,7 +307,7 @@ namespace             ELib
     @brief Clear the ENetSelector list unused.
     @details Delete every ENetSelectors that are empty and not running.
   */
-  void                ENetServer::clearSelectors()
+  void                  ENetServer::clearSelectors()
   {
     WaitForSingleObject(m_mutexSelectors, INFINITE);
     for (std::vector<ENetSelector*>::iterator l_it = m_selectors.begin(); l_it != m_selectors.end(); )
@@ -314,7 +330,7 @@ namespace             ELib
     @brief Get the ENetPacketHandler of the ENetServer.
     @return Reference to the ENetPacketHandler of the ENetServer.
   */
-  ENetPacketHandler   &ENetServer::getPacketHandler()
+  ENetPacketHandler     &ENetServer::getPacketHandler()
   {
     return (m_packetHandler);
   }
@@ -323,7 +339,7 @@ namespace             ELib
     @brief Determine if the ENetServer is running.
     @return bool indicating if the ENetServer is running.
   */
-  bool                ENetServer::isRunning() const
+  bool                  ENetServer::isRunning() const
   {
     return (m_isRunning);
   }
@@ -332,9 +348,9 @@ namespace             ELib
     @brief Retreive the ENetServer informations as string.
     @return String containing informations of ENetServer.
   */
-  const std::string   ENetServer::toString() const
+  const std::string     ENetServer::toString() const
   {
-    std::string       l_str;
+    std::string         l_str;
 
     l_str = "ENetServer ";
     l_str += isRunning() ? "running\n" : "stopped\n";
