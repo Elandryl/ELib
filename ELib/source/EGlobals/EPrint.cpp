@@ -12,13 +12,13 @@
 /**
   @brief General scope for ELib components.
 */
-namespace         ELib
+namespace                   ELib
 {
 
   /**
     @brief Unique definition for global gEPrinter.
   */
-  ELib::EPrinter  __gEPrinter;
+  ELib::EPrinter            __gEPrinter;
 
   /**
     @brief Processing function for EPRINT_TYPE_SPECIAL_ACTIVE printing.
@@ -28,7 +28,7 @@ namespace         ELib
     @param p_message New message to be processed. Empty message will flush the queue.
     @param p_messages Queue of messages for special EPrintType.
   */
-  void            EPrinterActiveProc(EPrintType p_type, const std::string &p_message, std::queue<std::string> &p_messages)
+  void                      EPrinterActiveProc(EPrintType p_type, const std::string &p_message, std::queue<std::string> &p_messages)
   {
     if (EPRINT_TYPE_SPECIAL_ACTIVE == p_type)
     {
@@ -50,7 +50,7 @@ namespace         ELib
     @details Erase the current Active line before priority printings.
     @param p_messages Queue of messages for active messages.
   */
-  void            EPrinterActivePre(std::queue<std::string> &p_messages)
+  void                      EPrinterActivePre(std::queue<std::string> &p_messages)
   {
     if (1 < p_messages.size())
     {
@@ -65,14 +65,27 @@ namespace         ELib
     @details It might not be last console output depending on user implementation.
     @param p_messages Queue of messages for active messages.
   */
-  void            EPrinterActivePost(std::queue<std::string> &p_messages)
+  void                      EPrinterActivePost(std::queue<std::string> &p_messages)
   {
     if (1 < p_messages.size())
     {
+      static size_t         l_currentLen = -1;
+      size_t                l_lastLen = 0;
+
+      l_lastLen = p_messages.front().size();
       p_messages.pop();
+      if ((-1 == l_currentLen)
+        || (p_messages.front().size() != l_lastLen))
+      {
+        l_currentLen = p_messages.front().size();
+      }
       SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x02);
-      std::cout << p_messages.front();
+      std::cout << p_messages.front().substr(0, l_currentLen);
       SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
+      if (0 < l_currentLen)
+      {
+        std::cout << p_messages.front().substr(l_currentLen);
+      }
     }
   }
 
@@ -81,7 +94,7 @@ namespace         ELib
     @param p_param Pointer to param from CreateThread caller.
     @return Unused.
   */
-  DWORD WINAPI    PrinterFunctor(LPVOID p_param)
+  DWORD WINAPI              PrinterFunctor(LPVOID p_param)
   {
     static_cast<EPrinter*>(p_param)->print();
 
@@ -125,7 +138,7 @@ namespace         ELib
     @brief Start automation of printing handling.
     @details Create a thread for printing loop.
   */
-  void            EPrinter::start()
+  void                      EPrinter::start()
   {
     if (false == m_isRunning)
     {
@@ -140,7 +153,7 @@ namespace         ELib
     @details Then handle priority printings.
     @details Finally call every post special functions depending on their priorities.
   */
-  void            EPrinter::print()
+  void                      EPrinter::print()
   {
     while (true == m_isRunning)
     {
@@ -190,7 +203,7 @@ namespace         ELib
     @brief Stop automation printing.
     @details Terminate the print loop thread.
   */
-  void            EPrinter::stop()
+  void                      EPrinter::stop()
   {
     if (true == m_isRunning)
     {
@@ -208,7 +221,7 @@ namespace         ELib
     @param p_type EPrintType of the new message to be handle.
     @param p_message New message to be handle.
   */
-  void            EPrinter::print(EPrintType p_type, const std::string &p_message)
+  void                      EPrinter::print(EPrintType p_type, const std::string &p_message)
   {
     if (true == m_isRunning)
     {
@@ -237,10 +250,10 @@ namespace         ELib
     @brief ELib getLine functions.
     @details This function is provided in accordance with ESpecial active type.
   */
-  std::string     EPrinter::getLine()
+  std::string               EPrinter::getLine()
   {
-    std::string   l_line = "";
-    char          l_cin = 0;
+    std::string             l_line = "";
+    char                    l_cin = 0;
 
     if (true == m_isRunning)
     {
@@ -293,7 +306,7 @@ namespace         ELib
     @param p_type EPrintType of messages to be processed.
     @param p_proc ESpecialProc for processing automation function.
   */
-  void            EPrinter::setSpecialProcPrinter(EPrintType p_type, ESpecialProc p_proc)
+  void                      EPrinter::setSpecialProcPrinter(EPrintType p_type, ESpecialProc p_proc)
   {
     m_specialProcPrinters[p_type] = p_proc;
   }
@@ -303,7 +316,7 @@ namespace         ELib
     @param p_type EPrintType of messages to be processed.
     @param p_proc ESpecialPrinter for pre-printing automation function.
   */
-  void            EPrinter::setSpecialPrePrinter(EPrintType p_type, ESpecialPrinter p_printer)
+  void                      EPrinter::setSpecialPrePrinter(EPrintType p_type, ESpecialPrinter p_printer)
   {
     m_specialPrePrinters[p_type] = p_printer;
   }
@@ -313,7 +326,7 @@ namespace         ELib
     @param p_type EPrintType of messages to be processed.
     @param p_proc ESpecialPrinter for post-printing automation function.
   */
-  void            EPrinter::setSpecialPostPrinter(EPrintType p_type, ESpecialPrinter p_printer)
+  void                      EPrinter::setSpecialPostPrinter(EPrintType p_type, ESpecialPrinter p_printer)
   {
     m_specialPostPrinters[p_type] = p_printer;
   }

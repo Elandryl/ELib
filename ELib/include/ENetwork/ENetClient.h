@@ -16,30 +16,32 @@ namespace               ELib
 {
 
   /**
-    @brief ENetClient automatize the handling of ENetSocket for receiving ENetPackets.
-    @details This class call recvPacket for incoming ENetPackets in its own thread.
-    @details Every received ENetPackets are contained in the ENetPacketHandler in FIFO order.
+    @brief Elib object for network client side automation (Singleton).
+    @details Call ENetClient::recvfrom() for incoming connectionless datas in its own thread.
+    @details Call ENetClient::recv() for incoming connected datas in its own thread.
+    @details Use ENetPacketHandler for ENetPacket storage.
   */
   class                 ENetClient
   {
   public:
-    ~ENetClient();
-    static ENetClient   *getInstance();
-    void                init(const std::string &p_hostname, uint16 p_port);
-    void                start();
-    void                stop();
-    void                recvPacket();
-    void                sendPacket(ENetPacket *p_packet);
-    ENetPacketHandler   &getPacketHandler();
-    bool                isRunning();
+    ~ENetClient();                                                            /**< .... */
+    static ENetClient   *getInstance();                                       /**< ..E. */
+    void                init(const std::string &p_hostname, uint16 p_port);   /**< ..E. */
+    void                start();                                              /**< ..E. */
+    void                stop();                                               /**< ..E. */
+    void                recvfrom();                                           /**< BME. */
+    void                recv();                                               /**< BME. */
+    void                send(ENetPacket *p_packet);                           /**< ..E. */
+    bool                isRunning();                                          /**< .... */
 
   private:
     ENetClient();
 
-    ENetSocket          m_socketServer;     /**< ENetSocket for communication to ENetServer. */
-    HANDLE              m_threadRecvPacket; /**< Handle for recvPacket thread. */
-    ENetPacketHandler   m_packetHandler;    /**< ENetPacketHandlet that contains the received ENetPackets. */
-    bool                m_isRunning;        /**< Indicate if ENetServer is running. */
+    ENetSocket          m_socketRecvfrom;   /**< recvfrom() ENetSocket. */
+    HANDLE              m_threadRecvfrom;   /**< recvfrom() thread. */
+    ENetSocket          m_socketRecv;       /**< recv() ENetSocket. */
+    HANDLE              m_threadRecv;       /**< recv() thread. */
+    bool                m_isRunning;        /**< State. */
   };
 
 }

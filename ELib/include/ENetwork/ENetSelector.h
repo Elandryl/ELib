@@ -8,7 +8,7 @@
 
 #include <vector>
 #include "EGlobals/EGlobal.h"
-#include "ENetwork/ENetPacketHandler.h"
+#include "ENetPacketHandler.h"
 
 /**
   @brief General scope for ELib components.
@@ -17,30 +17,29 @@ namespace                     ELib
 {
   
   /**
-    @brief ELib object for ENetSocket receives automation.
-    @details This class call select on a set of ENetSocket in its own thread.
-    @details It is automatically stopped when no ENetSocket are contained.
+    @brief ELib object for connected ENetSocket automation in ENetServer.
+    @details Call ENetSelector::select() on its clients in its own thread.
+    @details Automatically stopped when no client are contained.
   */
   class                       ENetSelector
   {
   public:
-    ENetSelector(ENetPacketHandler &p_packetHandler, ENetSocket *p_client);
-    ~ENetSelector();
-    void                      start();
-    void                      stop();
-    void                      select();
-    bool                      addClient(ENetSocket *p_client);
-    void                      broadcast(ENetPacket *p_packet);
-    bool                      isEmpty() const;
-    bool                      isRunning() const;
-    const std::string         toString() const;
+    ENetSelector();                                             /**< .... */
+    ~ENetSelector();                                            /**< .... */
+    void                      start();                          /**< ..E. */
+    void                      stop();                           /**< ..E. */
+    void                      select();                         /**< BME. */
+    bool                      addClient(ENetSocket *p_client);  /**< .ME. */
+    void                      broadcast(ENetPacket *p_packet);  /**< .ME. */
+    uint32                    getSize() const;                  /**< .... */
+    bool                      isRunning() const;                /**< .... */
+    const std::string         toString() const;                 /**< .M.. */
 
   private:
-    ENetPacketHandler         &m_packetHandler; /**< ENetPacketHandler that hold the received ENetPackets. */
-    std::vector<ENetSocket*>  m_socketClients;  /**< List of ENetSocket that are handled by this ENetSelector. */
-    HANDLE                    m_threadSelect;   /**< Handle for select thread. */
-    HANDLE                    m_mutexClients;   /**< Semaphore for m_socketsClients thread safety. */
-    bool                      m_isRunning;      /**< Indicate if ENetSelector is running. */
+    std::vector<ENetSocket*>  m_clients;        /**< ENetSocket list. */
+    HANDLE                    m_threadSelect;   /**< select() thread. */
+    HANDLE                    m_mutexClients;   /**< m_client semaphore. */
+    bool                      m_isRunning;      /**< State. */
   };
 
 }

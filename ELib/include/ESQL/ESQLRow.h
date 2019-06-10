@@ -17,23 +17,23 @@ namespace                     ELib
 {
 
   /**
-    @brief ELib object for SQL row container.
-    @details ESQLRow is a list of ESQLFields for storing a SQL row result.
+    @brief ELib object for SQL row handling.
+    @details Container for ESQLFields.
   */
   class                       ESQLRow
   {
   public:
-    ESQLRow();
-    ~ESQLRow();
-    void                      push(char *p_datas);
-    void                      push(ESQLField *p_field);
-    ESQLField                 *at(uint32 p_field);
-    ESQLField                 *operator[](uint32 p_field);
-    uint32                    getSize() const;
-    char                      **toCharArray();
+    ESQLRow();                                              /**< /!\ .... */
+    ~ESQLRow();                                             /**< /!\ .... */
+    void                      push(ESQLField *p_field);     /**< /!\ ..E. */
+    void                      push(char *p_datas);          /**< /!\ ..E. */
+    ESQLField                 *at(uint32 p_field);          /**< /!\ ..E. */
+    ESQLField                 *operator[](uint32 p_field);  /**< /!\ ..E. */
+    uint32                    getSize() const;              /**< /!\ .... */
+    char                      **toCharArray();              /**< /!\ ..E. */
   
   private:
-    std::vector<ESQLField*>   m_fields; /**< ESQLRow contents as ESQLFields. */
+    std::vector<ESQLField*>   m_fields; /**< ESQLFields list. */
   };
 
 }

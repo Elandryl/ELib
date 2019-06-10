@@ -20,21 +20,21 @@ namespace       ELib
   class         ESQLField
   {
   public:
-    ESQLField(char *p_datas);
-    ~ESQLField();
-    operator    uint64() const;
-    operator    uint32() const;
-    operator    uint16() const;
-    operator    uint8() const;
-    operator    int64() const;
-    operator    int32() const;
-    operator    int16() const;
-    operator    int8() const;
-    operator    char*() const;
-    operator    const std::string() const;
-    operator    float() const;
-    operator    double() const;
-    operator    bool() const;
+    ESQLField(char *p_datas);               /**< /!\ ..E. */
+    ~ESQLField();                           /**< /!\ .... */
+    operator    uint64() const;             /**< /!\ ..E. */
+    operator    uint32() const;             /**< /!\ ..E. */
+    operator    uint16() const;             /**< /!\ ..E. */
+    operator    uint8() const;              /**< /!\ ..E. */
+    operator    int64() const;              /**< /!\ ..E. */
+    operator    int32() const;              /**< /!\ ..E. */
+    operator    int16() const;              /**< /!\ ..E. */
+    operator    int8() const;               /**< /!\ ..E. */
+    operator    char*() const;              /**< /!\ ..E. */
+    operator    const std::string() const;  /**< /!\ ..E. */
+    operator    float() const;              /**< /!\ ..E. */
+    operator    double() const;             /**< /!\ ..E. */
+    operator    bool() const;               /**< /!\ ..E. */
 
   private:
     char        *m_datas; /**< ESQLField content as bytes. */

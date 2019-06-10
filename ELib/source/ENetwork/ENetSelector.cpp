@@ -13,42 +13,39 @@ namespace                     ELib
 {
 
   /**
-    @brief Functor for select thread.
-    @param p_param Pointer to param from CreateThread caller.
+    @brief Functor for ENetSelector::select(). /!\ EError.
+    @param p_selector ENetSelector caller.
     @return Unused.
   */
-  DWORD WINAPI                SelectFunctor(LPVOID p_param)
+  DWORD WINAPI                SelectFunctor(LPVOID p_selector)
   {
-    static_cast<ENetSelector*>(p_param)->select();
+    mEERROR_R();
+    if (nullptr != p_selector)
+    {
+      static_cast<ENetSelector*>(p_selector)->select();
+    }
+    else
+    {
+      mEERROR_SH(EERROR_NULL_PTR);
+    }
 
     return (0);
   }
 
   /**
-    @brief Instantiate a ENetSelector and store its client.
-    @details Initialize its mutex and store the ENetPacketHandler that will be use for storage.
-    @details ENetSelector need a least a ENetSocket client to run. If p_client is null, ENetSelector will automatically close itself.
-    @param p_packetHandler ENetPacketHandler that will hold the received ENetPackets.
-    @param p_client Pointer to ENetSocket client that need the creation.
+    @brief Constructor for ENetSelector.
   */
-  ENetSelector::ENetSelector(ENetPacketHandler &p_packetHandler, ENetSocket *p_client) :
-    m_packetHandler(p_packetHandler),
-    m_socketClients({}),
+  ENetSelector::ENetSelector() :
+    m_clients(),
     m_threadSelect(nullptr),
     m_mutexClients(nullptr),
     m_isRunning(false)
   {
-    ENetPacketType            l_type = ENETPACKET_TYPE_CONNECT;
-
-    m_mutexClients = CreateMutex(nullptr, false, nullptr);
-    m_socketClients.push_back(p_client);
-    m_packetHandler.generate(p_client, reinterpret_cast<char*>(&l_type), sizeof(ENetPacketType));
-
   }
 
   /**
-    @brief Delete a ENetSelector.
-    @details Release its mutex, terminate its thread.
+    @brief Destructor for ENetSelector.
+    @details Release its mutex, terminate its thread, delete its ENetSockets.
   */
   ENetSelector::~ENetSelector()
   {
@@ -56,42 +53,64 @@ namespace                     ELib
     CloseHandle(m_mutexClients);
     TerminateThread(m_threadSelect, 0);
     CloseHandle(m_threadSelect);
+    while (m_clients.empty() != true)
+    {
+      delete (m_clients.front());
+      m_clients.erase(m_clients.begin());
+    }
   }
 
   /**
-    @brief Start the ENetSelector automation.
-    @details Create the thread of ENetSelector and call its select function.
-    @details ENetSelector need to have at least one ENetSocket to handle.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_NET_SELECTOR_RUNNING if the ENetSelector is already running.
-    @eerror EERROR_NET_SELECTOR_EMPTY it the ENetSelector is empty.
+    @brief Start ENetSelector automation. /!\ EError.
+    @details Initialize its mutex, create thread for select().
+    @details Need at least one client.
   */
   void                      ENetSelector::start()
   {
     mEERROR_R();
     if (true == m_isRunning)
     {
-      mEERROR_S(EERROR_NET_SELECTOR_RUNNING);
+      mEERROR_S(EERROR_NET_SELECTOR_STATE);
     }
-    if (true == isEmpty())
+    if (0 == getSize())
     {
       mEERROR_S(EERROR_NET_SELECTOR_EMPTY);
     }
 
     if (EERROR_NONE == mEERROR)
     {
-      m_threadSelect = CreateThread(nullptr, 0, SelectFunctor, this, 0, nullptr);
-      m_isRunning = true;
+      m_mutexClients = CreateMutex(nullptr, false, nullptr);
+      if (nullptr != m_mutexClients)
+      {
+        m_threadSelect = CreateThread(nullptr, 0, SelectFunctor, this, 0, nullptr);
+        if (nullptr != m_threadSelect)
+        {
+          m_isRunning = true;
+        }
+        else
+        {
+          mEERROR_SA(EERROR_WINDOWS_ERR, WindowsErrString(GetLastError()));
+        }
+      }
+      else
+      {
+        mEERROR_SA(EERROR_WINDOWS_ERR, WindowsErrString(GetLastError()));
+      }
     }
   }
 
   /**
-    @brief Stop the ENetSelector automation.
-    @details Terminate the thread of the ENetSelector, and release its mutex.
+    @brief Stop ENetSelector automation. /!\ EError.
+    @details Release its mutex, terminate its thread.
   */
   void                        ENetSelector::stop()
   {
-    if (true == m_isRunning)
+    if (false == m_isRunning)
+    {
+      mEERROR_S(EERROR_NET_SELECTOR_STATE);
+    }
+
+    if (EERROR_NONE == mEERROR)
     {
       m_isRunning = false;
       ReleaseMutex(m_mutexClients);
@@ -100,12 +119,11 @@ namespace                     ELib
   }
 
   /**
-    @brief Handle the reception of ENetPacket for the ENetSocket clients contained in the ENetSelector.
-    @details Automatically receive the ENetPacket of ENetSockets in the list of clients handle by this ENetSelector.
-    @details Store the received ENetPackets in the ENetPacketHandler linked at the creation of ENetSelector.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_NET_SELECTOR_SELECT if select() fail.
-    @eerror EERROR_NET_SELECTOR_RECV if recvPacket() fail.
+    @brief Loop for connected ENetSocket automation. /!\ Blocking. /!\ Mutex. /!\ EError.
+    @details Receive ENetPacket from ENetSocket clients and store them into ENetPacketHandler.
+    @details Close ENetPacket client receive failure.
+    @details Stop when clients list is empty.
+    @details ENetPacketHandler Singleton need to be valid.
   */
   void                        ENetSelector::select()
   {
@@ -114,68 +132,93 @@ namespace                     ELib
       fd_set                  l_set = { 0 };
       uint64                  l_maxFd = 0;
       timeval                 l_timeout = { 0, 100000 };
-      int32                   l_ret = SOCKET_ERROR;
 
       mEERROR_R();
-      WaitForSingleObject(m_mutexClients, INFINITE);
-      FD_ZERO(&l_set);
-      for (std::vector<ENetSocket*>::iterator l_it = m_socketClients.begin(); l_it != m_socketClients.end(); ++l_it)
+      if (nullptr != ENetPacketHandler::getInstance())
       {
-        l_maxFd = max(l_maxFd, **l_it);
-        FD_SET(**l_it, &l_set);
-      }
-      l_ret = ::select(static_cast<int>(l_maxFd), &l_set, nullptr, nullptr, &l_timeout);
-      if (SOCKET_ERROR != l_ret)
-      {
-        for (std::vector<ENetSocket*>::iterator l_it = m_socketClients.begin(); l_it != m_socketClients.end(); ++l_it)
+        mEERROR_SH(EERROR_NULL_PTR);
+        stop();
+        if (EERROR_NONE != mEERROR)
         {
-          if (0 != FD_ISSET(**l_it, &l_set))
-          {
-            m_packetHandler.recvPacket(*l_it);
-            if (EERROR_NONE != mEERROR)
-            {
-              ENetPacketType  l_type = ENETPACKET_TYPE_DISCONNECT;
+          mEERROR_SH(EERROR_NET_SELECTOR_ERR);
+        }
+      }
 
-              mEERROR_SA(EERROR_NET_SELECTOR_RECV, mEERROR_G.toString());
-              m_packetHandler.generate(*l_it, reinterpret_cast<char*>(&l_type), sizeof(ENetPacketType));
-              (*l_it)->close();
+      if (EERROR_NONE == mEERROR)
+      {
+        WaitForSingleObject(m_mutexClients, INFINITE);
+        FD_ZERO(&l_set);
+        for (std::vector<ENetSocket*>::iterator l_client = m_clients.begin(); l_client != m_clients.end(); ++l_client)
+        {
+          l_maxFd = max(l_maxFd, **l_client);
+          FD_SET(**l_client, &l_set);
+        }
+        if (SOCKET_ERROR != ::select(static_cast<int>(l_maxFd), &l_set, nullptr, nullptr, &l_timeout))
+        {
+          for (std::vector<ENetSocket*>::iterator l_client = m_clients.begin(); l_client != m_clients.end(); )
+          {
+            bool                l_closed = false;
+
+            if (0 != FD_ISSET(**l_client, &l_set))
+            {
+              ENetPacketHandler::getInstance()->recvPacket(*l_client);
+              if (EERROR_NONE != mEERROR)
+              {
+                ENetPacketType  l_type = ENETPACKET_TYPE_DISCONNECT;
+
+                mEERROR_SH(EERROR_NET_PACKETHANDLER_ERR);
+                ENetPacketHandler::getInstance()->read(reinterpret_cast<char*>(&l_type), sizeof(ENetPacketType), *l_client);
+                if (EERROR_NONE == mEERROR)
+                {
+                  (*l_client)->close();
+                  if (EERROR_NONE == mEERROR)
+                  {
+                    // delete (*l_client); -> TODO: high risk of segfault when reading packets.
+                    l_client = m_clients.erase(l_client);
+                    l_closed = true;
+                    if (0 == getSize())
+                    {
+                      stop();
+                      if (EERROR_NONE != mEERROR)
+                      {
+                        mEERROR_SH(EERROR_NET_SELECTOR_ERR);
+                      }
+                    }
+                  }
+                  else
+                  {
+                    mEERROR_SH(EERROR_NET_SOCKET_ERR);
+                  }
+                }
+                else
+                {
+                  mEERROR_SH(EERROR_NET_PACKETHANDLER_ERR);
+                }
+              }
+            }
+            if (false == l_closed)
+            {
+              l_client++;
             }
           }
         }
-        for (std::vector<ENetSocket*>::iterator l_it = m_socketClients.begin(); l_it != m_socketClients.end(); )
+        else
         {
-          if (ENETSOCKET_FLAGS_STATE_UNINITIALIZED == (*l_it)->getFlags())
-          {
-            l_it = m_socketClients.erase(l_it);
-          }
-          else
-          {
-            l_it++;
-          }
+          mEERROR_SA(EERROR_WINDOWS_ERR, WindowsErrString(WSAGetLastError()));
         }
-        if (true == isEmpty())
-        {
-          stop();
-        }
+        ReleaseMutex(m_mutexClients);
       }
-      else
-      {
-        mEERROR_SA(EERROR_NET_SELECTOR_SELECT, getWSAErrString());
-      }
-      ReleaseMutex(m_mutexClients);
     }
   }
 
   /**
-    @brief Add a ENetSocket client to the set of this ENetSelector.
-    @details Add the client only if there is enough space for it.
-    @details The client is only added when the Semaphore is released. Might cause a delay.
-    @details If an error occurs, ENetSocket client is invalid and can't be added to any ENetSelector. It should be discarded by user.
-    @param p_client Pointer to ENetSocket to be add to ENetSelector handling.
-    @return true in success.
-    @return false if p_client is null, ENetSelector is already full or not running, or an EError occured.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_NET_SOCKET_INVALID if p_client is null.
+    @brief Add a connected ENetSocket client to automation. /!\ Mutex. /!\ EError.
+    @details Can contains up to ENETSOCKET_MAX_CLIENTS clients.
+    @details An EError indicate that ENetSocket client should be discarded.
+    @details ENetPacketHandler Singleton need to be valid.
+    @param p_client ENetPacket client.
+    @return true on success.
+    @return false on failure.
   */
   bool                        ENetSelector::addClient(ENetSocket *p_client)
   {
@@ -184,34 +227,53 @@ namespace                     ELib
     mEERROR_R();
     if (nullptr == p_client)
     {
-      mEERROR_S(EERROR_NET_SOCKET_INVALID);
+      mEERROR_S(EERROR_NULL_PTR);
+    }
+    if ((nullptr != p_client)
+      && (ENETSOCKET_FLAGS_STATE_CONNECTED != (p_client->getFlags() & ENETSOCKET_FLAGS_STATES)))
+    {
+      mEERROR_S(EERROR_NET_SOCKET_STATE);
+    }
+    if ((nullptr != p_client)
+      && (ENETSOCKET_FLAGS_PROTOCOL_TCP != (p_client->getFlags() & ENETSOCKET_FLAGS_PROTOCOLS)))
+    {
+      mEERROR_S(EERROR_NET_SOCKET_PROTOCOL);
+    }
+    if (nullptr != ENetPacketHandler::getInstance())
+    {
+      mEERROR_SH(EERROR_NULL_PTR);
     }
 
-    if ((EERROR_NONE == mEERROR)
-      && (ENETSOCKET_MAX_CLIENTS > m_socketClients.size()))
+    if (EERROR_NONE == mEERROR)
     {
-      WaitForSingleObject(m_mutexClients, INFINITE);
-      if (true == m_isRunning)
+      if (ENETSOCKET_MAX_CLIENTS > m_clients.size())
       {
         ENetPacketType        l_type = ENETPACKET_TYPE_CONNECT;
 
-        m_packetHandler.generate(p_client, reinterpret_cast<char*>(&l_type), sizeof(ENetPacketType));
-        m_socketClients.push_back(p_client);
-        l_ret = true;
+        WaitForSingleObject(m_mutexClients, INFINITE);
+        ENetPacketHandler::getInstance()->read(reinterpret_cast<char*>(&l_type), sizeof(ENetPacketType), p_client);
+        if (EERROR_NONE == mEERROR)
+        {
+          m_clients.push_back(p_client);
+          l_ret = true;
+        }
+        else
+        {
+          /*
+            mEERROR_SA(EERROR_NET_PACKETHANDLER_ERR);
+            EError is ignored to indicate that ENetSocket client is still valid.
+          */
+        }
+        ReleaseMutex(m_mutexClients);
       }
-      ReleaseMutex(m_mutexClients);
     }
 
     return (l_ret);
   }
 
   /**
-    @brief Send ENetPacket to every ENetSocket connected to the ENetSelector.
-    @details Send ENetPacket to every ENetSocket connected to the ENetSelector.
-    @details EErrors during sends are ignored.
+    @brief Send ENetPacket to every ENetSocket clients. /!\ Mutex. /!\ EError.
     @param p_packet ENetPacket to be send.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_NULL_PTR if p_packet is null.
   */
   void                        ENetSelector::broadcast(ENetPacket *p_packet)
   {
@@ -223,26 +285,30 @@ namespace                     ELib
     if (EERROR_NONE == mEERROR)
     {
       WaitForSingleObject(m_mutexClients, INFINITE);
-      for (std::vector<ENetSocket*>::iterator l_it = m_socketClients.begin(); l_it != m_socketClients.end(); ++l_it)
+      for (std::vector<ENetSocket*>::iterator l_it = m_clients.begin(); l_it != m_clients.end(); ++l_it)
       {
         p_packet->send(*l_it);
+        if (EERROR_NONE != mEERROR)
+        {
+          mEERROR_S(EERROR_NET_PACKET_ERR);
+        }
       }
       ReleaseMutex(m_mutexClients);
     }
   }
 
   /**
-    @brief Determine if the ENetSelector is empty.
-    @return bool indicating if the ENetSelector is empty.
+    @brief Get number of clients.
+    @return Number of clients.
   */
-  bool                        ENetSelector::isEmpty() const
+  uint32                      ENetSelector::getSize() const
   {
-    return (m_socketClients.empty());
+    return (static_cast<uint32>(m_clients.size()));
   }
 
   /**
-    @brief Determine if the ENetSelector is running.
-    @return bool indicating if the ENetSelector is running.
+    @brief Get state of ENetSelector.
+    @return State.
   */
   bool                        ENetSelector::isRunning() const
   {
@@ -250,19 +316,20 @@ namespace                     ELib
   }
 
   /**
-    @brief Retreive the ENetSelector informations as string.
-    @return String containing informations of ENetSelector.
+    @brief Get ENetSelector informations as string. /!\ Mutex.
+    @return Informations of ENetSelector.
   */
   const std::string           ENetSelector::toString() const
   {
     std::string               l_str;
 
     l_str = "ENetSelector ";
-    l_str += isRunning() ? "running\n" : "stopped\n";
+    l_str += isRunning() ? "running " : "stopped ";
+    l_str += "(" + std::to_string(getSize()) + " clients).\n";
     WaitForSingleObject(m_mutexClients, INFINITE);
-    for (std::vector<ENetSocket*>::const_iterator l_it = m_socketClients.begin(); l_it != m_socketClients.end(); ++l_it)
+    for (std::vector<ENetSocket*>::const_iterator l_it = m_clients.begin(); l_it != m_clients.end(); ++l_it)
     {
-      l_str += "  " + (*l_it)->toString() + "\n";
+      l_str += "  " + (*l_it)->toString() + ".\n";
     }
     ReleaseMutex(m_mutexClients);
 

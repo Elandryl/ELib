@@ -9,57 +9,85 @@
 /**
   @brief General scope for ELib components.
 */
-namespace               ELib
+namespace                     ELib
 {
 
   /**
-    @brief Generator for ENetPacketDisconnect.
-    @param p_src Pointer to ENetSocket source of ENetPacket.
-    @return Pointer to generated ENetPacketDisconnect.
+    @brief Generator for ENetPacketDisconnect. /!\ EError.
+    @param p_src ENetSocket source of ENetPacket.
+    @return Generated ENetPacketDisconnect on success.
+    @return nullptr on failure.
   */
-  ENetPacket            *generateENetPacketDisconnect(ENetSocket *p_src)
+  ENetPacket                  *generateENetPacketDisconnect(ENetSocket *p_src)
   {
-    return (new ENetPacketDisconnect(p_src));
+    ENetPacket                *l_packet = nullptr;
+
+    mEERROR_R();
+    l_packet = new ENetPacketDisconnect(p_src);
+    if (nullptr == l_packet)
+    {
+      mEERROR_S(EERROR_MEMORY);
+    }
+
+    return (l_packet);
   }
 
   /**
-    @brief Generator for ENetPacketConnect.
-    @param p_src Pointer to ENetSocket source of ENetPacket.
-    @return Pointer to generated ENetPacketConnect.
+    @brief Generator for ENetPacketConnect. /!\ EError.
+    @param p_src ENetSocket source of ENetPacket.
+    @return Generated ENetPacketConnect on success.
+    @return nullptr on failure.
   */
-  ENetPacket            *generateENetPacketConnect(ENetSocket *p_src)
+  ENetPacket                  *generateENetPacketConnect(ENetSocket *p_src)
   {
-    return (new ENetPacketConnect(p_src));
+    ENetPacket                *l_packet = nullptr;
+
+    mEERROR_R();
+    l_packet = new ENetPacketConnect(p_src);
+    if (nullptr == l_packet)
+    {
+      mEERROR_S(EERROR_MEMORY);
+    }
+
+    return (l_packet);
   }
 
   /**
-    @brief Generator for ENetPacketRawDatas.
-    @param p_src Pointer to ENetSocket source of ENetPacket.
-    @return Pointer to generated ENetPacketRawDatas.
+    @brief Generator for ENetPacketRawDatas. /!\ EError.
+    @param p_src ENetSocket source of ENetPacket.
+    @return Generated ENetPacketRawDatas on success.
+    @return nullptr on failure.
   */
-  ENetPacket            *generateENetPacketRawDatas(ENetSocket *p_src)
+  ENetPacket                  *generateENetPacketRawDatas(ENetSocket *p_src)
   {
-    return (new ENetPacketRawDatas(p_src));
+    ENetPacket                *l_packet = nullptr;
+
+    mEERROR_R();
+    l_packet = new ENetPacketRawDatas(p_src);
+    if (nullptr == l_packet)
+    {
+      mEERROR_S(EERROR_MEMORY);
+    }
+
+    return (l_packet);
   }
 
   /**
-    @brief Instantiate a ENetPacketHandler.
-    @details Initialize its mutex and add the ELib ENetPacketGenerators.
-    @details It should be unique in a EServer or EClient.
+    @brief Constructor for ENetPacketHandler.
+    @details Add Basics ENetPacketGenerators.
   */
   ENetPacketHandler::ENetPacketHandler() :
-    m_generators({}),
+    m_generators(),
     m_packets(),
     m_mutexPackets(nullptr)
   {
-    m_mutexPackets = CreateMutex(nullptr, false, nullptr);
     m_generators[ENETPACKET_TYPE_DISCONNECT] = generateENetPacketDisconnect;
     m_generators[ENETPACKET_TYPE_CONNECT] = generateENetPacketConnect;
     m_generators[ENETPACKET_TYPE_RAW_DATAS] = generateENetPacketRawDatas;
   }
 
   /**
-    @brief Delete a ENetPacketHandler.
+    @brief Destructor for ENetPacketHandler.
     @details Release its mutex.
   */
   ENetPacketHandler::~ENetPacketHandler()
@@ -69,12 +97,51 @@ namespace               ELib
   }
 
   /**
-    @brief Pop a ENetPacket from the queue, FIFO order.
-    @return Pointer to first ENetPacket from the queue.
+    @brief Singleton for ENetPacketHandler. /!\ EError.
+    @details Initialize its mutex.
+    @return ENetPacketHandler unique instance on success.
+    @return nullptr on failure.
   */
-  ENetPacket            *ENetPacketHandler::getPacket()
+  ENetPacketHandler           *ENetPacketHandler::getInstance()
   {
-    ENetPacket          *l_packet = nullptr;
+    static ENetPacketHandler  *l_instance = nullptr;
+
+    mEERROR_R();
+    if (nullptr == l_instance)
+    {
+      HANDLE                  l_mutex = nullptr;
+
+      l_mutex = CreateMutex(nullptr, false, nullptr);
+      if (nullptr != l_mutex)
+      {
+        l_instance = new ENetPacketHandler();
+        if (nullptr == l_instance)
+        {
+          l_instance->m_mutexPackets = l_mutex;
+        }
+        else
+        {
+          mEERROR_S(EERROR_MEMORY);
+          CloseHandle(l_mutex);
+        }
+      }
+      else
+      {
+        mEERROR_SA(EERROR_WINDOWS_ERR, WindowsErrString(GetLastError()));
+      }
+    }
+
+    return (l_instance);
+  }
+
+  /**
+    @brief Pop a ENetPacket from the queue. /!\ Mutex.
+    @return First ENetPacket from the queue.
+    @return nullptr if queue is empty.
+  */
+  ENetPacket                  *ENetPacketHandler::popPacket()
+  {
+    ENetPacket                *l_packet = nullptr;
 
     WaitForSingleObject(m_mutexPackets, INFINITE);
     if (false == m_packets.empty())
@@ -88,38 +155,40 @@ namespace               ELib
   }
 
   /**
-    @brief Receive a ENetPacket from the ENetSocket in parameter.
-    @details Automatically handle the reception of a ENetPacket from a ENetSocket source.
-    @param p_src Pointer to ENetSocket source.
-    @eerror EERROR_NONE in success. The received ENetPacket is added to the queue.
-    @eerror EERROR_NET_SOCKET_INVALID if p_src is null.
-    @eerror EERROR_NET_PACKET_INVALID if no ENetPacketGenerator is define for the ENetPacketType received.
-    @eerror EERROR_OOM if ENetPacket allocation fail.
-    @eerror EERROR_NET_PACKET_TRUNCATED if ENetPacket can't be fully retrieved from the buffer.
-    @eerror EERROR_NET_PACKET_RECV if recv() failed.
+    @brief Receive a ENetPacket from connected ENetSocket source. /!\ Blocking. /!\ Mutex. /!\ EError.
+    @details Receive ENetPacketType, then call its ENetPacket...::recv().
+    @details Can be blocking on bad behavior, waiting for datas that were not properly sent.
+    @details On success, received ENetPacket is added to queue.
+    @details Source must be valid.
+    @param p_src ENetSocket source.
   */
-  void                  ENetPacketHandler::recvPacket(ENetSocket *p_src)
+  void                        ENetPacketHandler::recvPacket(ENetSocket *p_src)
   {
     mEERROR_R();
     if (nullptr == p_src)
     {
-      mEERROR_S(EERROR_NET_SOCKET_INVALID);
+      mEERROR_S(EERROR_NULL_PTR);
+    }
+    if ((nullptr != p_src)
+      && (ENETSOCKET_FLAGS_PROTOCOL_TCP != (p_src->getFlags() & ENETSOCKET_FLAGS_PROTOCOLS)))
+    {
+      mEERROR_S(EERROR_NET_SOCKET_PROTOCOL);
     }
 
     if (EERROR_NONE == mEERROR)
     {
-      int32             l_len = 0;
-      ENetPacketType    l_type = ENETPACKET_TYPE_DISCONNECT;
+      int32                   l_len = 0;
+      ENetPacketType          l_type = ENETPACKET_TYPE_DISCONNECT;
 
       l_len = p_src->recv(reinterpret_cast<char*>(&l_type), sizeof(ENetPacketType));
       if (EERROR_NONE == mEERROR)
       {
         if ((sizeof(ENetPacketType) == l_len)
-          || (0 == l_len))
+          || (0 == l_len)) // Generate an ENetPacketDisconnect.
         {
           if (m_generators.find(l_type) != m_generators.end())
           {
-            ENetPacket  *l_packet = nullptr;
+            ENetPacket        *l_packet = nullptr;
 
             l_packet = m_generators[l_type](p_src);
             if (nullptr != l_packet)
@@ -133,17 +202,17 @@ namespace               ELib
               }
               else
               {
-                mEERROR_SA(EERROR_NET_PACKET_RECV, mEERROR_G.toString());
+                mEERROR_SH(EERROR_NET_PACKET_ERR);
               }
             }
             else
             {
-              mEERROR_S(EERROR_OOM);
+              mEERROR_SH(EERROR_NET_PACKETHANDLER_ERR);
             }
           }
           else
           {
-            mEERROR_S(EERROR_NET_PACKET_INVALID);
+            mEERROR_S(EERROR_NET_PACKET_TYPE);
           }
         }
         else
@@ -153,31 +222,22 @@ namespace               ELib
       }
       else
       {
-        mEERROR_SA(EERROR_NET_PACKET_RECV, mEERROR_G.toString());
+        mEERROR_SH(EERROR_NET_SOCKET_ERR);
       }
     }
   }
 
   /**
-    @brief Generate a ENetPacket from the buffer in parameter.
-    @details Automatically handle the generation of a ENetPacket from a buffer.
-    @param p_src Pointer to ENetSocket source.
-    @param p_datas Pointer to buffer that contains the datas of ENetPacket.
-    @param p_len Length of the buffer.
-    @eerror EERROR_NONE in success. The received ENetPacket is added to the queue.
-    @eerror EERROR_NET_SOCKET_INVALID if p_src is null.
-    @eerror EERROR_OOM if ENetPacket allocation fail.
-    @eerror EERROR_NET_PACKET_INVALID if no ENetPacketGenerator is define for the ENetPacketType received.
-    @eerror EERROR_NET_PACKET_TRUNCATED if generate() failed.
-    @eerror EERROR_NULL_PTR if p_datas is null.
+    @brief Read a ENetPacket from buffer. /!\ Mutex. /!\ EError.
+    @details Read ENetPacketType, then call its ENetPacket...::read().
+    @details On success, read ENetPacket is added to queue.
+    @param p_datas Buffer of datas to be read.
+    @param p_len Length of buffer.
+    @param p_src ENetSocket source.
   */
-  void                  ENetPacketHandler::generate(ENetSocket *p_src, char *p_datas, int32 p_len)
+  void                        ENetPacketHandler::read(char *p_datas, int32 p_len, ENetSocket *p_src)
   {
     mEERROR_R();
-    if (nullptr == p_src)
-    {
-      mEERROR_S(EERROR_NET_SOCKET_INVALID);
-    }
     if (nullptr == p_datas)
     {
       mEERROR_S(EERROR_NULL_PTR);
@@ -186,9 +246,9 @@ namespace               ELib
     if (EERROR_NONE == mEERROR)
     {
       if ((sizeof(ENetPacketType) <= p_len)
-        || (0 == p_len))
+        || (0 == p_len)) // Generate an ENetPacketDisconnect.
       {
-        ENetPacketType  l_type = ENETPACKET_TYPE_DISCONNECT;
+        ENetPacketType        l_type = ENETPACKET_TYPE_DISCONNECT;
 
         if (0 != p_len)
         {
@@ -196,12 +256,12 @@ namespace               ELib
         }
         if (m_generators.find(l_type) != m_generators.end())
         {
-          ENetPacket    *l_packet = nullptr;
+          ENetPacket          *l_packet = nullptr;
 
           l_packet = m_generators[l_type](p_src);
           if (nullptr != l_packet)
           {
-            l_packet->generate(p_datas + sizeof(ENetPacketType), p_len - sizeof(ENetPacketType));
+            l_packet->read(p_datas + sizeof(ENetPacketType), p_len - sizeof(ENetPacketType));
             if (EERROR_NONE == mEERROR)
             {
               l_packet->setSource(p_src);
@@ -211,17 +271,17 @@ namespace               ELib
             }
             else
             {
-              mEERROR_SA(EERROR_NET_PACKET_TRUNCATED, mEERROR_G.toString());
+              mEERROR_SH(EERROR_NET_PACKET_ERR);
             }
           }
           else
           {
-            mEERROR_S(EERROR_OOM);
+            mEERROR_SH(EERROR_NET_PACKETHANDLER_ERR);
           }
         }
         else
         {
-          mEERROR_S(EERROR_NET_PACKET_INVALID);
+          mEERROR_S(EERROR_NET_PACKET_TYPE);
         }
       }
       else
@@ -232,38 +292,35 @@ namespace               ELib
   }
 
   /**
-    @brief Add a ENetPacketGenerator to automation.
-    @details An ENetPacketGenerator is a pointer to function that generate a ENetPacket.
-    @details User can add custom ENetPacketGenerator with type over ENETPACKET_TYPE_RESERVED.
-    @param p_type ENetPacketType of ENetPacket that the ENetPacketGenerator handle.
-    @param p_generator ENetPacketGenerator that is add to automation.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_NET_PACKET_RESERVED if the ENetPacketType is in range of ENETPACKET_TYPE_RESERVED.
+    @brief Add type/generator to automation. /!\ EError.
+    @details Type must be over ENETPACKET_TYPE_RESERVED.
+    @param p_type Type to be added.
+    @param p_generator Generator for type.
   */
-  void                  ENetPacketHandler::setGenerator(ENetPacketType type, ENetPacketGenerator generator)
+  void                        ENetPacketHandler::setGenerator(ENetPacketType p_type, ENetPacketGenerator p_generator)
   {
     mEERROR_R();
-    if (ENETPACKET_TYPE_RESERVED >= type)
+    if (ENETPACKET_TYPE_RESERVED >= p_type)
     {
-      mEERROR_S(EERROR_NET_PACKET_RESERVED);
+      mEERROR_SA(EERROR_NET_PACKET_TYPE, "Trying to add ENetPacketGenerator with reserved ENetPacketType.");
     }
 
     if (EERROR_NONE == mEERROR)
     {
-      m_generators[type] = generator;
+      m_generators[p_type] = p_generator;
     }
   }
 
   /**
-    @brief Clean the queue from every ENetPackets linked to ENetSocket parameter.
-    @param p_socket Pointer to ENetSocket that will cleaned from the queue.
+    @brief Clean queue from ENetPackets linked to ENetSocket in parameter. /!\ Mutex.
+    @param p_socket ENetSocket that will cleaned from queue.
   */
-  void                  ENetPacketHandler::cleanSocket(const ENetSocket *p_socket)
+  void                        ENetPacketHandler::cleanSocket(const ENetSocket *p_socket)
   {
-    size_t              l_size = 0;
+    size_t                    l_size = 0;
 
-    l_size = m_packets.size();
     WaitForSingleObject(m_mutexPackets, INFINITE);
+    l_size = m_packets.size();
     for (size_t l_pos = 0; l_pos < l_size; ++l_pos)
     {
       if (*m_packets.front()->getSource() != *p_socket)

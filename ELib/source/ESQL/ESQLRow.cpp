@@ -13,7 +13,7 @@ namespace       ELib
 {
 
   /**
-    @brief Instantiate ESQLRow, container for a SQL row results.
+    @brief Constructof for ESQLRow.
   */
   ESQLRow::ESQLRow() :
     m_fields()
@@ -21,7 +21,8 @@ namespace       ELib
   }
 
   /**
-    @brief Destroy a ESQLRow, deleting its ESQLFields.
+    @brief Destructor for ESQLRow.
+    @details Delete its ESQLFields.
   */
   ESQLRow::~ESQLRow()
   {
@@ -33,19 +34,34 @@ namespace       ELib
   }
   
   /**
-    @brief Add datas to ESQLRow.
-    @details An ESQLField is created and added at the back of ESQLRow.
-    @param p_datas Content for ESQLField to be add.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_SQL_FIELD_INVALID is p_datas is null or if ESQLField creation issued an error.
-    @eerror EERROR_OOM if ESQLField allocation fail.
+    @brief Add ESQLField to ESQLRow. /!\ EError.
+    @param p_field ESQLField to be add.
+  */
+  void          ESQLRow::push(ESQLField *p_field)
+  {
+    mEERROR_R();
+    if (nullptr == p_field)
+    {
+      mEERROR_S(EERROR_NULL_PTR);
+    }
+
+    if (EERROR_NONE == mEERROR)
+    {
+      m_fields.push_back(p_field);
+    }
+  }
+
+  /**
+    @brief Add datas to ESQLRow. /!\ EError.
+    @details Create a ESQLField from datas, then call ESQLRow::push().
+    @param p_datas Datas to be add.
   */
   void          ESQLRow::push(char *p_datas)
   {
     mEERROR_R();
     if (nullptr == p_datas)
     {
-      mEERROR_S(EERROR_SQL_FIELD_INVALID);
+      mEERROR_S(EERROR_NULL_PTR);
     }
 
     if (EERROR_NONE == mEERROR)
@@ -57,47 +73,33 @@ namespace       ELib
       {
         if (EERROR_NONE == mEERROR)
         {
-          m_fields.push_back(l_field);
+          push(l_field);
+          if (EERROR_NONE != mEERROR)
+          {
+            mEERROR_SH(EERROR_SQL_ROW_ERR);
+          }
         }
         else
         {
-          mEERROR_SA(EERROR_SQL_FIELD_INVALID, mEERROR_G.toString());
+          mEERROR_SH(EERROR_SQL_FIELD_ERR);
+        }
+        if (EERROR_NONE != mEERROR)
+        {
+          delete (l_field);
         }
       }
       else
       {
-        mEERROR_S(EERROR_OOM);
+        mEERROR_S(EERROR_MEMORY);
       }
     }
   }
-  
-  /**
-    @brief Add ESQLField to ESQLRow.
-    @param p_field ESQLField to be add.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_SQL_FIELD_INVALID is p_field is null.
-  */
-  void          ESQLRow::push(ESQLField *p_field)
-  {
-    mEERROR_R();
-    if (nullptr == p_field)
-    {
-      mEERROR_S(EERROR_SQL_FIELD_INVALID);
-    }
-
-    if (EERROR_NONE == mEERROR)
-    {
-      m_fields.push_back(p_field);
-    }
-  }
 
   /**
-    @brief Retrieve a ESQLField from an ESQLRow.
+    @brief Get ESQLField from ESQLRow. /!\ EError.
     @param p_field Field of ESQLField to be retrieve.
-    @return ESQLField at p_field in success.
-    @return nullptr if an EError occured.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_SQL_OUT_OR_RANGE is p_field is bigger than m_fields size.
+    @return ESQLField on success.
+    @return nullptr on failure.
   */
   ESQLField     *ESQLRow::at(uint32 p_field)
   {
@@ -106,7 +108,7 @@ namespace       ELib
     mEERROR_R();
     if (static_cast<uint32>(m_fields.size()) < p_field)
     {
-      mEERROR_S(EERROR_SQL_OUT_OF_RANGE);
+      mEERROR_S(EERROR_OUT_OF_RANGE);
     }
 
     if (EERROR_NONE == mEERROR)
@@ -118,21 +120,37 @@ namespace       ELib
   }
   
   /**
-    @brief Retrieve a ESQLField from an ESQLRow using at().
+    @brief Get ESQLField from ESQLRow. /!\ EError.
+    @details Call ESQLRow::at().
     @param p_field Field of ESQLField to be retrieve.
-    @return ESQLField at p_field in success.
-    @return nullptr if an EError occured.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_SQL_OUT_OR_RANGE is p_field is bigger than m_fields size.
+    @return ESQLField on success.
+    @return nullptr on failure.
   */
   ESQLField     *ESQLRow::operator[](uint32 p_field)
   {
-    return (at(p_field));
+    ESQLField   *l_field = nullptr;
+
+    mEERROR_R();
+    if (static_cast<uint32>(m_fields.size()) < p_field)
+    {
+      mEERROR_S(EERROR_OUT_OF_RANGE);
+    }
+
+    if (EERROR_NONE == mEERROR)
+    {
+      l_field = at(p_field);
+      if (EERROR_NONE != mEERROR)
+      {
+        mEERROR_SH(EERROR_SQL_ROW_ERR);
+      }
+    }
+
+    return (l_field);
   }
 
   /**
-    @brief Retrieve the number of ESQLField in ESQLRow.
-    @return Number of ESQLField in ESQLRow.
+    @brief Get number of fields.
+    @return Number of fields.
   */
   uint32        ESQLRow::getSize() const
   {
@@ -140,11 +158,10 @@ namespace       ELib
   }
   
   /**
-    @brief Retrieve every ESQLFields as an array of buffers.
-    @return Array of ESQLFields as buffers in success.
-    @return nullptr if an EError occured.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_OOM if l_datasArray allocation fail.
+    @brief Get ESQLRow content as buffers array.
+    @details Returns a copy of ESQLRow content. User should delete it after usage.
+    @return Buffers array on success.
+    @return nullptr on failure.
   */
   char          **ESQLRow::toCharArray()
   {
@@ -159,11 +176,15 @@ namespace       ELib
         for (uint32 l_field = 0; l_field < m_fields.size(); ++l_field)
         {
           l_datasArray[l_field] = static_cast<char*>(*m_fields[l_field]);
+          if (EERROR_NONE != mEERROR)
+          {
+            mEERROR_SH(EERROR_SQL_FIELD_ERR);
+          }
         }
       }
       else
       {
-        mEERROR_S(EERROR_OOM);
+        mEERROR_S(EERROR_MEMORY);
       }
     }
 

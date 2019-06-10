@@ -16,22 +16,23 @@ namespace         ELib
 {
 
   /**
-    @brief Instantiate a ESQL object for ELib SQL handling.
-    @details ESQL object use mysql library.
+    @brief ELib object for MYSQL handling (Singleton).
   */
   class           ESQL
   {
   public:
-    ESQL();
-    ~ESQL();
-    void          connect(const std::string &p_hostname, uint16 p_port, const std::string &p_user,
+    ~ESQL();                                                                                        /**< /!\ .... */
+    static ESQL   *getInstance();                                                                   /**< /!\ ..E. */
+    void          connect(const std::string &p_hostname, uint16 p_port, const std::string &p_user,  /**< /!\ ..E. */
                     const std::string &p_password, const std::string &p_database);
-    void          query(const std::string &p_query);
-    ESQLResult    *getResult(bool p_indexed = false);
-    void          close();
+    void          query(const std::string &p_query);                                                /**< /!\ ..E. */
+    ESQLResult    *getResult(bool p_indexed = false);                                               /**< /!\ ..E. */
+    void          close();                                                                          /**< /!\ .... */
   
   private:
-    void          *m_mysql;       /**< Handle for mysql connection. */
+    ESQL();
+
+    void          *m_mysql;       /**< Handle for MYSQL connection handler. */
     bool          m_isConnected;  /**< Indicate if ESQL is connected. */
   };
 

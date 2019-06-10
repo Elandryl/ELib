@@ -8,9 +8,9 @@
 
 #include "EGlobals/EGlobal.h"
 
-#define ENETSOCKET_MAX_CLIENTS  (64)      /**< Define the max number of client in the accept queue. */
-#define ENETSOCKET_FAMILY       (AF_INET) /**< Define the socket family used in ELib. (AF_INET for IPv4 only) */
-#define ENETSOCKET_UDP_MAX      (65507)   /**< Define the lengh max of a UDP EPacket */
+#define ENETSOCKET_FAMILY       (AF_INET) /**< Socket family used in ELib (IPv4 only). */
+#define ENETSOCKET_MAX_CLIENTS  (64)      /**< Max number of client in the accept queue. */
+#define ENETSOCKET_UDP_MAX      (65507)   /**< Lengh max of UDP EPacket */
 
 
 /**
@@ -20,25 +20,24 @@ namespace                       ELib
 {
 
   /**
-    @brief Flags for state and protocol of a ENetSocket.
+    @brief Flags for states and protocols of ENetSocket.
   */
   enum                          ENetSocketFlags
   {
-    ENETSOCKET_FLAGS_STATE_UNINITIALIZED   = 0x00,
-    ENETSOCKET_FLAGS_STATE_INITIALIZED     = 0x01,
-    ENETSOCKET_FLAGS_STATE_BOUND           = 0x02,
-    ENETSOCKET_FLAGS_STATE_LISTENING       = 0x04,
-    ENETSOCKET_FLAGS_STATE_CONNECTED       = 0x08,
-    ENETSOCKET_FLAGS_STATES                = 0x0F, /**< Range of Status. */
+    ENETSOCKET_FLAGS_STATE_UNINITIALIZED   = 0x0000,
+    ENETSOCKET_FLAGS_STATE_INITIALIZED     = 0x0001,
+    ENETSOCKET_FLAGS_STATE_BOUND           = 0x0002,
+    ENETSOCKET_FLAGS_STATE_LISTENING       = 0x0004,
+    ENETSOCKET_FLAGS_STATE_CONNECTED       = 0x0008,
+    ENETSOCKET_FLAGS_STATES                = 0x000F,  /**< States range. */
 
-    ENETSOCKET_FLAGS_PROTOCOL_UNDEFINED    = 0x00,
-    ENETSOCKET_FLAGS_PROTOCOL_TCP          = 0x10,
-    ENETSOCKET_FLAGS_PROTOCOL_UDP          = 0x20,
-    ENETSOCKET_FLAGS_PROTOCOLS             = 0x30 /**< Range of Protocols. */
+    ENETSOCKET_FLAGS_PROTOCOL_TCP          = 0x0010,
+    ENETSOCKET_FLAGS_PROTOCOL_UDP          = 0x0020,
+    ENETSOCKET_FLAGS_PROTOCOLS             = 0x0030   /**< Protocols range. */
   };
 
   /**
-    @brief Services for shutdown call.
+    @brief Services for ENetSocket::shutdown call.
   */
   enum                          ENetSocketService
   {
@@ -55,24 +54,24 @@ namespace                       ELib
   class                         ENetSocket
   {
   public:
-    ENetSocket();
-    ~ENetSocket();
-    void                        socket(ENetSocketFlags p_protocol);
-    void                        bind(const std::string &p_hostname, uint16 p_port);
-    void                        listen();
-    ENetSocket                  *accept();
-    void                        connect(const std::string &p_hostname, uint16 p_port);
-    int32                       recv(char *p_datas, uint16 p_len);
-    int32                       recvfrom(char *p_datas, uint16 p_len, ENetSocket *p_src);
-    int32                       send(const char *p_datas, uint16 p_len);
-    int32                       sendto(const char *p_datas, uint16 p_len, const ENetSocket *p_dst);
-    void                        shutdown(ENetSocketService p_service = ENETSOCKET_SERVICE_BOTH);
-    void                        close();
-    const std::string           &getHostname() const;
-    uint16                      getPort() const;
-    ENetSocketFlags             getFlags() const;
-    operator                    uint64() const;
-    const std::string           toString() const;
+    ENetSocket();                                                                                   /**< /!\ .... */
+    ~ENetSocket();                                                                                  /**< /!\ ..E. */
+    void                        socket(ENetSocketFlags p_protocol);                                 /**< /!\ ..E. */
+    void                        bind(const std::string &p_hostname, uint16 p_port);                 /**< /!\ ..E. */
+    void                        listen();                                                           /**< /!\ ..E. */
+    ENetSocket                  *accept();                                                          /**< /!\ B.E. */
+    void                        connect(const std::string &p_hostname, uint16 p_port);              /**< /!\ ..E. */
+    int32                       recv(char *p_datas, uint16 p_len);                                  /**< /!\ B.E. */
+    int32                       recvfrom(char *p_datas, uint16 p_len, ENetSocket *p_src);           /**< /!\ B.E. */
+    int32                       send(const char *p_datas, uint16 p_len);                            /**< /!\ ..E. */
+    int32                       sendto(const char *p_datas, uint16 p_len, const ENetSocket *p_dst); /**< /!\ ..E. */
+    void                        shutdown(ENetSocketService p_service = ENETSOCKET_SERVICE_BOTH);    /**< /!\ ..E. */
+    void                        close();                                                            /**< /!\ ..E. */
+    const std::string           &getHostname() const;                                               /**< /!\ .... */
+    uint16                      getPort() const;                                                    /**< /!\ .... */
+    ENetSocketFlags             getFlags() const;                                                   /**< /!\ .... */
+    operator                    uint64() const;                                                     /**< /!\ .... */
+    const std::string           toString() const;                                                   /**< /!\ .... */
 
   private:
     SOCKET                      m_socket;   /**< Unique identifier. */

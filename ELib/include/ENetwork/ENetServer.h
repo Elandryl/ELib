@@ -16,36 +16,38 @@ namespace                       ELib
 {
 
   /**
-    @brief ENetServer automatize the handling of ENetSockets for receiving ENetPackets.
-    @details This class call accept for incoming connections in its own thread.
-    @details It will generate new ENetSelector every MAX_CLIENTS to dispatch the load.
-    @details Every received ENetPackets are contained in the ENetPacketHandler in FIFO order.
+    @brief Elib object for network server side automation (Singleton).
+    @details Call ENetServer::recvfrom() for incoming connectionless datas in its own thread.
+    @details Call ENetServer::accept() for incoming connections in its own thread.
+    @details Automatically generate ENetSelector every MAX_CLIENTS to dispatch load.
+    @details Use ENetPacketHandler for ENetPacket storage.
   */
   class                         ENetServer
   {
   public:
-    ~ENetServer();
-    static ENetServer           *getInstance();
-    void                        init(const std::string &p_hostname, uint16 p_port);
-    void                        start();
-    void                        stop();
-    void                        accept();
-    void                        addClient(ENetSocket *p_client);
-    void                        broadcast(ENetPacket *p_packet);
-    void                        clearSelectors();
-    ENetPacketHandler           &getPacketHandler();
-    bool                        isRunning() const;
-    const std::string           toString() const;
+    ~ENetServer();                                                                    /**< .... */
+    static ENetServer           *getInstance();                                       /**< ..E. */
+    void                        init(const std::string &p_hostname, uint16 p_port);   /**< ..E. */
+    void                        start();                                              /**< .ME. */
+    void                        stop();                                               /**< .ME. */
+    void                        recvfrom();                                           /**< BME. */
+    void                        accept();                                             /**< BME. */
+    void                        addClient(ENetSocket *p_client);                      /**< .ME. */
+    void                        broadcast(ENetPacket *p_packet);                      /**< .ME. */
+    void                        clearSelectors();                                     /**< .M.. */
+    bool                        isRunning() const;                                    /**< .... */
+    const std::string           toString() const;                                     /**< .M.. */
 
   private:
     ENetServer();
 
-    ENetSocket                  m_socketAccept;   /**< ENetSocket for accept incoming connection. */
-    HANDLE                      m_threadAccept;   /**< Handle for accept thread. */
-    std::vector<ENetSelector*>  m_selectors;      /**< List of ENetSelector that contains and handles the ENetSocket clients. */
-    HANDLE                      m_mutexSelectors; /**< Semaphore for m_selectors thread safety. */
-    ENetPacketHandler           m_packetHandler;  /**< ENetPacketHandler that contains the received ENetPackets. */
-    bool                        m_isRunning;      /**< Indicate if ENetServer is running. */
+    ENetSocket                  m_socketRecvfrom; /**< recvfrom() ENetSocket. */
+    HANDLE                      m_threadRecvfrom; /**< recvfrom() thread. */
+    ENetSocket                  m_socketAccept;   /**< accept() ENetSocket. */
+    HANDLE                      m_threadAccept;   /**< accept() thread. */
+    std::vector<ENetSelector*>  m_selectors;      /**< ENetSelector list. */
+    HANDLE                      m_mutexSelectors; /**< m_selectors semaphore. */
+    bool                        m_isRunning;      /**< State. */
   };
 
 }

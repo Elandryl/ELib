@@ -16,52 +16,36 @@ namespace             ELib
 {
 
   /**
-    @brief Unique definition for global gELastEError.
+    @brief Global __gELastEError definition.
   */
   ELib::EError        __gELastEError;
 
   /**
-    @brief EError definitions for EErrorCodes.
+    @brief EError definitions.
   */
   const std::string   EErrorDefinitions[] =
   {
+    // GLOBALS
     "EERROR_NONE",
-    "EERROR_OOM",
+    "EERROR_MEMORY",
     "EERROR_NULL_PTR",
+    "EERROR_WINDOWS_ERR",
 
     // NETWORK
-    "EERROR_NET_WSA_STARTUP",
+    "EERROR_NET_SOCKET_ERR",
     "EERROR_NET_SOCKET_STATE",
     "EERROR_NET_SOCKET_PROTOCOL",
-    "EERROR_NET_SOCKET_INVALID",
-    "EERROR_NET_SOCKET_BIND",
-    "EERROR_NET_SOCKET_LISTEN",
-    "EERROR_NET_SOCKET_ACCEPT",
-    "EERROR_NET_SOCKET_CONNECT",
-    "EERROR_NET_SOCKET_RECV",
-    "EERROR_NET_SOCKET_RECVFROM",
-    "EERROR_NET_SOCKET_SEND",
-    "EERROR_NET_SOCKET_SENDTO",
-    "EERROR_NET_SOCKET_SHUTDOWN",
-    "EERROR_NET_SOCKET_CLOSE",
-    "EERROR_NET_PACKET_INVALID",
-    "EERROR_NET_PACKET_RECV",
-    "EERROR_NET_PACKET_SEND",
+    "EERROR_NET_PACKET_ERR",
     "EERROR_NET_PACKET_TRUNCATED",
-    "EERROR_NET_PACKET_RESERVED",
-    "EERROR_NET_SELECTOR_RUNNING",
+    "EERROR_NET_PACKET_TYPE",
+    "EERROR_NET_PACKETHANDLER_ERR",
+    "EERROR_NET_SELECTOR_ERR",
+    "EERROR_NET_SELECTOR_STATE",
     "EERROR_NET_SELECTOR_EMPTY",
-    "EERROR_NET_SELECTOR_SELECT",
-    "EERROR_NET_SELECTOR_RECV",
-    "EERROR_NET_SELECTOR_SEND",
-    "EERROR_NET_SERVER_INIT",
-    "EERROR_NET_SERVER_START",
-    "EERROR_NET_SERVER_STOP",
-    "EERROR_NET_SERVER_ADD",
-    "EERROR_NET_SERVER_RUNNING",
-    "EERROR_NET_CLIENT_INIT",
-    "EERROR_NET_CLIENT_STOP",
-    "EERROR_NET_CLIENT_RUNNING",
+    "EERROR_NET_SERVER_ERR",
+    "EERROR_NET_SERVER_STATE",
+    "EERROR_NET_CLIENT_ERR",
+    "EERROR_NET_CLIENT_STATE",
 
     // SQL
     "EERROR_SQL_MYSQL_ERROR",
@@ -76,15 +60,15 @@ namespace             ELib
   };
 
   /**
-    @brief Empty constructor used for initialing globals.
-    @details This call forces EError.cpp to be call before any EError and allocate its global variable.
+    @brief Constructor for EError.
+    @details Force EError.cpp to be call before any EError to allocate its global variable.
   */
   EError::EError()
   {
   }
 
   /**
-    @brief Format AdditionnalInfos from EError for display.
+    @brief Format AdditionnalInfos.
   */
   void                EError::formatInfos()
   {
@@ -99,8 +83,8 @@ namespace             ELib
   }
 
   /**
-    @brief Convert EError to std::string.
-    @return String of EError informations.
+    @brief Get EError informations as string.
+    @return Informations of EError.
   */
   const std::string   EError::toString() const
   {
@@ -122,17 +106,15 @@ namespace             ELib
   }
 
   /**
-    @brief Retrieve WSA last error and returns its informations.
-    @return String containing informations of last WSA error.
+    @brief Get string from Windows error code.
+    @return Windows error informations.
   */
-  std::string         getWSAErrString()
+  std::string         WindowsErrString(DWORD l_code)
   {
-    int               l_err = 0;
     LPWSTR            l_buf = nullptr;
     std::string       l_str = "";
 
-    l_err = WSAGetLastError();
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, l_err,
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, l_code,
       NULL, reinterpret_cast<LPWSTR>(&l_buf), 0, NULL);
     l_str = CW2A(l_buf, CP_UTF8);
     LocalFree(l_buf);
@@ -140,7 +122,8 @@ namespace             ELib
   }
 
   /**
-    @brief Initialize the EException with __gELastEError datas.
+    @brief Constructor for EException.
+    @details Retrieve __gELastEError as content.
   */
   EException::EException() :
     std::exception(mEERROR_G.toString().c_str())
@@ -148,15 +131,15 @@ namespace             ELib
   }
 
   /**
-    @brief Do nothing.
+    @brief Destructor for EException.
   */
   EException::~EException()
   {
   }
 
   /**
-    @brief Convert EException to std::string.
-    @return String of Exception informations.
+    @brief Get EException informations as string.
+    @return Informations of EException.
   */
   const std::string   EException::toString() const
   {
@@ -164,7 +147,7 @@ namespace             ELib
   }
 
   /**
-    @brief Print the String of Exception Information through Windows MessageBox.
+    @brief Print Exception Information through Windows MessageBox.
   */
   void                EException::printBox() const
   {

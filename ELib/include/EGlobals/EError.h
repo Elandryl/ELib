@@ -10,56 +10,39 @@
 #include <string>
 
 /**
-  @brief List every EErrorCode from ELib components.
+  @brief ELib EErrorCode list.
 */
 enum                    EErrorCode
 {
   // GLOBALS
   EERROR_NONE           = 0,
-  EERROR_OOM,
+  EERROR_MEMORY,
   EERROR_NULL_PTR,
+  EERROR_WINDOWS_ERR,
+  EERROR_OUT_OF_RANGE,
 
   // NETWORK
-  EERROR_NET_WSA_STARTUP,
+  EERROR_NET_SOCKET_ERR,
   EERROR_NET_SOCKET_STATE,
   EERROR_NET_SOCKET_PROTOCOL,
-  EERROR_NET_SOCKET_INVALID,
-  EERROR_NET_SOCKET_BIND,
-  EERROR_NET_SOCKET_LISTEN,
-  EERROR_NET_SOCKET_ACCEPT,
-  EERROR_NET_SOCKET_CONNECT,
-  EERROR_NET_SOCKET_RECV,
-  EERROR_NET_SOCKET_RECVFROM,
-  EERROR_NET_SOCKET_SEND,
-  EERROR_NET_SOCKET_SENDTO,
-  EERROR_NET_SOCKET_SHUTDOWN,
-  EERROR_NET_SOCKET_CLOSE,
-  EERROR_NET_PACKET_INVALID,
-  EERROR_NET_PACKET_RECV,
-  EERROR_NET_PACKET_SEND,
+  EERROR_NET_PACKET_ERR,
   EERROR_NET_PACKET_TRUNCATED,
-  EERROR_NET_PACKET_RESERVED,
-  EERROR_NET_SELECTOR_RUNNING,
+  EERROR_NET_PACKET_TYPE,
+  EERROR_NET_PACKETHANDLER_ERR,
+  EERROR_NET_SELECTOR_ERR,
+  EERROR_NET_SELECTOR_STATE,
   EERROR_NET_SELECTOR_EMPTY,
-  EERROR_NET_SELECTOR_SELECT,
-  EERROR_NET_SELECTOR_RECV,
-  EERROR_NET_SELECTOR_SEND,
-  EERROR_NET_SERVER_INIT,
-  EERROR_NET_SERVER_START,
-  EERROR_NET_SERVER_STOP,
-  EERROR_NET_SERVER_ADD,
-  EERROR_NET_SERVER_RUNNING,
-  EERROR_NET_CLIENT_INIT,
-  EERROR_NET_CLIENT_STOP,
-  EERROR_NET_CLIENT_RUNNING,
+  EERROR_NET_SERVER_ERR,
+  EERROR_NET_SERVER_STATE,
+  EERROR_NET_CLIENT_ERR,
+  EERROR_NET_CLIENT_STATE,
 
   // SQL
-  EERROR_SQL_MYSQL_ERROR,
-  EERROR_SQL_NOT_CONNECTED,
-  EERROR_SQL_FIELD_INVALID,
-  EERROR_SQL_OUT_OF_RANGE,
-  EERROR_SQL_WRONG_PADDING,
-  EERROR_SQL_RESULT_FAILURE,
+  EERROR_SQL_STATE,
+  EERROR_SQL_MYSQL_ERR,
+  EERROR_SQL_FIELD_ERR,
+  EERROR_SQL_ROW_ERR,
+  EERROR_SQL_RESULT_ERR,
 
   // END
   EERROR_COUNT
@@ -72,8 +55,7 @@ namespace               ELib
 {
 
   /**
-    @brief ELib structure containing error informations.
-    @details toString() is automatically formated in multiline display.
+    @brief ELib object for error tracking.
   */
   struct                EError
   {
@@ -87,15 +69,11 @@ namespace               ELib
     const std::string   toString() const;
   };
 
-  /**
-    @brief ELib function to retrieve Windows error informations.
-    @return Windows error informations as a string.
-  */
-  std::string           getWSAErrString();
+  std::string           WindowsErrString(DWORD p_code);
 
   /**
     @brief ELib object for exception handling.
-    @details Automatically retrieve the last error at initialization.
+    @details Retrieve last EError at initialization.
     @details Inherit from std::exception.
   */
   class                 EException : std::exception
@@ -109,10 +87,10 @@ namespace               ELib
 
   /**
     @brief Global variable for error tracking.
-    @details Easy access maccro is defined as mEERROR_G.
-    @details Easy modifier maccro are defined as mEERROR_S and mEERROR_SA.
-    @details This is used in EException. User can throw exception by calling mETHROW or mETHROWA.
-    @details Functions implementing this should first reset it with mEERROR_R.
+    @details Access maccro is defined as mEERROR_G.
+    @details Modifier maccro are defined as mEERROR_S(), mEERROR_SA(additionnal) and mEERROR_SH(history).
+    @details Used by EException. User can throw exception by calling mETHROW_S() or mETHROW_SA(additionnal).
+    @details Functions using EError should first reset it by calling mEERROR_R().
   */
   extern EError         __gELastEError;
 
@@ -121,40 +99,42 @@ namespace               ELib
 #define mEERROR         (ELib::__gELastEError.m_errorCode)
 #define mEERROR_G       (ELib::__gELastEError)
 
-#define mEERROR_R()                                   \
-{                                                     \
-  memset(&__gELastEError, 0, sizeof(EError));         \
+#define mEERROR_R()                                     \
+{                                                       \
+  memset(&__gELastEError, 0, sizeof(EError));           \
 }
 
-#define mEERROR_S(p_errorCode)                        \
-{                                                     \
-  mEERROR = p_errorCode;                \
-  mEERROR_G.m_functionName = __FUNCTION__;            \
-  mEERROR_G.m_fileName = __FILE__;                    \
-  mEERROR_G.m_lineNumber = __LINE__;                  \
-  mEPRINT_ERR(mEERROR_G.toString())                   \
+#define mEERROR_S(p_errorCode)                          \
+{                                                       \
+  mEERROR = p_errorCode;                                \
+  mEERROR_G.m_functionName = __FUNCTION__;              \
+  mEERROR_G.m_fileName = __FILE__;                      \
+  mEERROR_G.m_lineNumber = __LINE__;                    \
+  mEPRINT_ERR(mEERROR_G.toString())                     \
 }
 
-#define mEERROR_SA(p_errorCode, p_additionnalInfos)   \
-{                                                     \
-  mEERROR_G.m_additionnalInfos = p_additionnalInfos;  \
-  mEERROR_G.formatInfos();                            \
-  mEERROR_S(p_errorCode);                             \
+#define mEERROR_SA(p_errorCode, p_additionnalInfos)     \
+{                                                       \
+  mEERROR_G.m_additionnalInfos = p_additionnalInfos;    \
+  mEERROR_G.formatInfos();                              \
+  mEERROR_S(p_errorCode);                               \
 }
 
-#define mETHROW()                                     \
-{                                                     \
-  throw (ELib::EException());                         \
+#define mEERROR_SH(p_errorCode)                         \
+{                                                       \
+  mEERROR_G.m_additionnalInfos = mEERROR_G.toString();  \
+  mEERROR_G.formatInfos();                              \
+  mEERROR_S(p_errorCode);                               \
 }
 
-#define mETHROW_S(p_errorCode)                        \
-{                                                     \
-  mEERROR_S(p_errorCode);                             \
-  throw (ELib::EException());                         \
+#define mETHROW_S(p_errorCode)                          \
+{                                                       \
+  mEERROR_S(p_errorCode);                               \
+  throw (ELib::EException());                           \
 }
 
-#define mETHROW_SA(p_errorCode)                       \
-{                                                     \
-  mEERROR_SA(p_errorCode, p_additionnalInfos);        \
-  throw (ELib::EException());                         \
+#define mETHROW_SA(p_errorCode)                         \
+{                                                       \
+  mEERROR_SA(p_errorCode, p_additionnalInfos);          \
+  mETHROW_S()                                           \
 }

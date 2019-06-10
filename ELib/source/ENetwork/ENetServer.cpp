@@ -13,91 +13,163 @@ namespace               ELib
 {
 
   /**
-    @brief Functor for accept thread.
+    @brief Functor for ENetServer::recvfrom(). /!\ EError.
     @param p_unused Unused.
     @return Unused.
   */
-  DWORD WINAPI          AcceptFunctor(LPVOID p_unused)
+  DWORD WINAPI          ServerRecvfromFunctor(LPVOID p_unused)
   {
-    ENetServer::getInstance()->accept();
+    mEERROR_R();
+    if (nullptr != ENetServer::getInstance())
+    {
+      ENetServer::getInstance()->recvfrom();
+    }
+    else
+    {
+      mEERROR_SH(EERROR_NULL_PTR);
+    }
+
+    return (0);
+  }
+
+  /**
+    @brief Functor for ENetServer::accept(). /!\ EError.
+    @param p_unused Unused.
+    @return Unused.
+  */
+  DWORD WINAPI          ServerAcceptFunctor(LPVOID p_unused)
+  {
+    mEERROR_R();
+    if (nullptr != ENetServer::getInstance())
+    {
+      ENetServer::getInstance()->accept();
+    }
+    else
+    {
+      mEERROR_SH(EERROR_NULL_PTR);
+    }
+
     return (0);
   }
   
   /**
-    @brief Singleton: Instantiate a ENetServer.
-    @details Initialize its mutex.
+    @brief Constructor for ENetServer.
   */
   ENetServer::ENetServer() :
+    m_socketRecvfrom(),
+    m_threadRecvfrom(nullptr),
     m_socketAccept(),
     m_threadAccept(nullptr),
     m_selectors({}),
     m_mutexSelectors(nullptr),
-    m_packetHandler(),
     m_isRunning(false)
   {
-    m_mutexSelectors = CreateMutex(nullptr, false, nullptr);
   }
   
   /**
-    @brief Delete a ENetServer.
-    @details Release its mutex, terminate its thread, close the accept ENetSocket, delete its ENetSelectors and close WSA.
+    @brief Destructor for ENetServer.
+    @details Release its mutex, terminate its threads, close its ENetSockets, delete its ENetSelectors and call WSACleanup().
   */
   ENetServer::~ENetServer()
   {
     ReleaseMutex(m_mutexSelectors);
     CloseHandle(m_mutexSelectors);
+    m_socketRecvfrom.close();
+    TerminateThread(m_threadRecvfrom, 0);
+    CloseHandle(m_threadRecvfrom);
     m_socketAccept.close();
     TerminateThread(m_threadAccept, 0);
     CloseHandle(m_threadAccept);
     while (m_selectors.empty() != true)
     {
-      m_selectors.front()->stop();
+      delete (m_selectors.front());
       m_selectors.erase(m_selectors.begin());
     }
     WSACleanup();
   }
 
   /**
-    @brief Retrieve Singleton of ENetServer.
-    @details Call WSAStartup at first call.
-    @return Unique instance of ENetServer.
-    @eerror EERROR_NET_WSA_STARTUP if WSAStartup() fail.
+    @brief Singleton for ENetServer. /!\ EError.
+    @details Call WSAStartup() and initialize its mutex.
+    @return ENetServer unique instance on success.
+    @return nullptr on failure.
   */
   ENetServer            *ENetServer::getInstance()
   {
     static ENetServer   *l_instance = nullptr;
 
+    mEERROR_R();
     if (nullptr == l_instance)
     {
       WSADATA           WSAData = { 0 };
 
-      if (0 != WSAStartup(MAKEWORD(2, 2), &WSAData))
+      if (0 == WSAStartup(MAKEWORD(2, 2), &WSAData))
       {
-        mEERROR_S(EERROR_NET_WSA_STARTUP);
+        HANDLE          l_mutex = nullptr;
+
+        l_mutex = CreateMutex(nullptr, false, nullptr);
+        if (nullptr != l_mutex)
+        {
+          l_instance = new ENetServer();
+          if (nullptr == l_instance)
+          {
+            l_instance->m_mutexSelectors = l_mutex;
+          }
+          else
+          {
+            CloseHandle(l_mutex);
+            mEERROR_S(EERROR_MEMORY);
+          }
+        }
+        else
+        {
+          mEERROR_SA(EERROR_WINDOWS_ERR, WindowsErrString(GetLastError()));
+        }
       }
-      l_instance = new ENetServer();
+      else
+      {
+        mEERROR_SA(EERROR_WINDOWS_ERR, WindowsErrString(WSAGetLastError()));
+      }
     }
 
     return (l_instance);
   }
 
   /**
-    @brief Initialize the ENetServer.
-    @details Prepare the ENetSocket accept to receive incoming connection on specific hostname.
+    @brief Initialize ENetServer. /!\ EError.
+    @details Prepare UDP ENetSocket for ENetServer::recvfrom().
+    @details Prepare TCP ENetSocket for ENetServer::accept().
     @param p_hostname Internet host address in number-and-dots notation.
     @param p_port Port of the host.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_NET_SERVER_RUNNING if ENetServer is already running.
-    @eerror EERROR_NET_SERVER_INIT if socket(), bind() or listen() failed.
   */
   void                  ENetServer::init(const std::string &p_hostname, uint16 p_port)
   {
     mEERROR_R();
     if (true == isRunning())
     {
-      mEERROR_S(EERROR_NET_SERVER_RUNNING);
+      mEERROR_S(EERROR_NET_SERVER_STATE);
     }
 
+    if (EERROR_NONE == mEERROR)
+    {
+      m_socketRecvfrom.socket(ENETSOCKET_FLAGS_PROTOCOL_UDP);
+      if (EERROR_NONE == mEERROR)
+      {
+        m_socketRecvfrom.bind(p_hostname, p_port);
+        if (EERROR_NONE == mEERROR)
+        {
+          mEPRINT_STD("ENetServer: UDP server ready on " + p_hostname + ":" + std::to_string(p_port) + ".");
+        }
+        else
+        {
+          mEERROR_SH(EERROR_NET_SOCKET_ERR);
+        }
+      }
+      else
+      {
+        mEERROR_SH(EERROR_NET_SOCKET_ERR);
+      }
+    }
     if (EERROR_NONE == mEERROR)
     {
       m_socketAccept.socket(ENETSOCKET_FLAGS_PROTOCOL_TCP);
@@ -109,66 +181,96 @@ namespace               ELib
           m_socketAccept.listen();
           if (EERROR_NONE == mEERROR)
           {
-            mEPRINT_STD("ENetServer successfully connected to " + p_hostname + ":" + std::to_string(p_port));
+            mEPRINT_STD("ENetServer: TCP server ready on " + p_hostname + ":" + std::to_string(p_port) + ".");
           }
           else
           {
-            mEERROR_S(EERROR_NET_SERVER_INIT);
+            mEERROR_SH(EERROR_NET_SOCKET_ERR);
           }
         }
         else
         {
-          mEERROR_S(EERROR_NET_SERVER_INIT);
+          mEERROR_SH(EERROR_NET_SOCKET_ERR);
         }
       }
       else
       {
-        mEERROR_S(EERROR_NET_SERVER_INIT);
+        mEERROR_SH(EERROR_NET_SOCKET_ERR);
       }
     }
   }
 
   /**
-    @brief Start the automation of the ENetServer.
-    @details Create the thread of the ENetServer and call its accept function.
-    @details Start every ENetSelector it contains by calling their run function.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_NET_SERVER_START if start() fail.
+    @brief Start ENetServer automation. /!\ Mutex. /!\ EError.
+    @details Create threads for ENetServer::recvfrom() and ENetServer:accept().
+    @details Call ENetSelector::start() on each ENetSelector (failures ignored).
+    @details ENetPacketHandler Singleton need to be valid.
   */
   void                  ENetServer::start()
   {
     mEERROR_R();
-    if (false == isRunning())
+    if (true == isRunning())
     {
-      WaitForSingleObject(m_mutexSelectors, INFINITE);
-      clearSelectors();
-      for (std::vector<ENetSelector*>::iterator l_it = m_selectors.begin(); l_it != m_selectors.end(); ++l_it)
+      mEERROR_S(EERROR_NET_SERVER_STATE);
+    }
+    if (nullptr == ENetPacketHandler::getInstance())
+    {
+      mEERROR_SH(EERROR_NULL_PTR);
+    }
+
+
+    if (EERROR_NONE == mEERROR)
+    {
+      m_threadRecvfrom = CreateThread(nullptr, 0, ServerRecvfromFunctor, nullptr, 0, nullptr);
+      if (nullptr != m_threadRecvfrom)
       {
-        (*l_it)->start();
-        if (EERROR_NONE != mEERROR)
+        m_threadAccept = CreateThread(nullptr, 0, ServerAcceptFunctor, nullptr, 0, nullptr);
+        if (nullptr != m_threadAccept)
         {
-          mEERROR_SA(EERROR_NET_SERVER_START, mEERROR_G.toString());
+          WaitForSingleObject(m_mutexSelectors, INFINITE);
+          clearSelectors();
+          for (std::vector<ENetSelector*>::iterator l_selector = m_selectors.begin(); l_selector != m_selectors.end(); ++l_selector)
+          {
+            (*l_selector)->start();
+            if (EERROR_NONE != mEERROR)
+            {
+              mEERROR_SH(EERROR_NET_SELECTOR_ERR);
+            }
+          }
+          ReleaseMutex(m_mutexSelectors);
+          m_isRunning = true;
+          mEPRINT_STD("ENetServer: Started successfully.");
+        }
+        else
+        {
+          TerminateThread(m_threadRecvfrom, 0);
+          mEERROR_SA(EERROR_WINDOWS_ERR, WindowsErrString(GetLastError()));
         }
       }
-      ReleaseMutex(m_mutexSelectors);
-      m_threadAccept = CreateThread(nullptr, 0, AcceptFunctor, nullptr, 0, nullptr);
-      m_isRunning = true;
-      mEPRINT_STD("ENetServer started");
+      else
+      {
+        mEERROR_SA(EERROR_WINDOWS_ERR, WindowsErrString(GetLastError()));
+      }
     }
   }
 
   /**
-    @brief Stop the ENetServer automation.
-    @details Terminate the accept function thread, and stop every ENetSelectors.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_NET_SERVER_STOP if stop() fail.
+    @brief Stop ENetServer automation. /!\ Mutex. /!\ EError.
+    @details Terminate its threads.
+    @details Call ENetSelector::stop() on each ENetSelectors (failures ignored).
   */
   void                  ENetServer::stop()
   {
     mEERROR_R();
-    if (true == isRunning())
+    if (false == isRunning())
+    {
+      mEERROR_S(EERROR_NET_SERVER_STATE);
+    }
+
+    if (EERROR_NONE == mEERROR)
     {
       m_isRunning = false;
+      TerminateThread(m_threadRecvfrom, 0);
       TerminateThread(m_threadAccept, 0);
       WaitForSingleObject(m_mutexSelectors, INFINITE);
       for (std::vector<ENetSelector*>::iterator l_it = m_selectors.begin(); l_it != m_selectors.end(); ++l_it)
@@ -176,24 +278,77 @@ namespace               ELib
         (*l_it)->stop();
         if (EERROR_NONE != mEERROR)
         {
-          mEERROR_SA(EERROR_NET_SERVER_STOP, mEERROR_G.toString());
+          mEERROR_SH(EERROR_NET_SELECTOR_ERR);
         }
       }
       ReleaseMutex(m_mutexSelectors);
-      mEPRINT_STD("ENetServer stopped");
+      mEPRINT_STD("ENetServer: Stopped successfully.");
     }
   }
 
   /**
-    @brief Accept incoming connection to the ENetServer.
-    @details Accept incoming connection to the ENetServer and add the ENetSocket created to a ENetSelector handling.
-    @details Automatically delete empty and not running ENetSelector at each new connection.
+    @brief Receive connectionless datas to ENetServer. /!\ Blocking. /!\ Mutex. /!\ EError.
+    @details Receive datas on connectionless ENetSocket and send them to ENetPacketHandler::read().
+    @details ENetPacketHandler Singleton need to be valid.
+  */
+  void                  ENetServer::recvfrom()
+  {
+    while (true == isRunning())
+    {
+      mEERROR_R();
+      if (nullptr != ENetPacketHandler::getInstance())
+      {
+        mEERROR_SH(EERROR_NULL_PTR);
+        stop();
+        if (EERROR_NONE != mEERROR)
+        {
+          mEERROR_SH(EERROR_NET_SERVER_ERR);
+        }
+      }
+
+      if (EERROR_NONE == mEERROR)
+      {
+        ENetSocket      *l_client = nullptr;
+
+        l_client = new ENetSocket();
+        if (nullptr != l_client)
+        {
+          char          l_datas[ENETSOCKET_UDP_MAX];
+          int32         l_len = -1;
+
+          l_len = m_socketRecvfrom.recvfrom(l_datas, ENETSOCKET_UDP_MAX, l_client);
+          if (0 < l_len)
+          {
+            ENetPacketHandler::getInstance()->read(l_datas, l_len, l_client);
+            if (EERROR_NONE != mEERROR)
+            {
+              mEERROR_SH(EERROR_NET_PACKETHANDLER_ERR);
+              delete (l_client);
+            }
+          }
+          else
+          {
+            mEERROR_SH(EERROR_NET_SOCKET_ERR);
+          }
+        }
+        else
+        {
+          mEERROR_S(EERROR_MEMORY);
+        }
+      }
+    }
+  }
+
+  /**
+    @brief Accept incoming connections to ENetServer. /!\ Blocking. /!\ Mutex. /!\ EError.
+    @details Accept connect ENetServer and send them to ENetServer::addClient().
   */
   void                  ENetServer::accept()
   {
     while (true == isRunning())
     {
-      ENetSocket        *l_client = nullptr;
+      mEERROR_R();
+      ENetSocket      *l_client = nullptr;
 
       l_client = m_socketAccept.accept();
       if (nullptr != l_client)
@@ -201,89 +356,95 @@ namespace               ELib
         addClient(l_client);
         if (EERROR_NONE != mEERROR)
         {
-          mEPRINT_ERR("Failed to connect EClient" + std::to_string(*l_client));
+          mEERROR_SH(EERROR_NET_SERVER_ERR);
+          mEPRINT_ERR("ENetServer: Failed to connect EClient " + std::to_string(*l_client) + ".");
           delete (l_client);
         }
       }
       else
       {
-        mEERROR_SA(EERROR_NET_SOCKET_INVALID, mEERROR_G.toString());
+        mEERROR_SH(EERROR_NET_SOCKET_ERR);
       }
     }
   }
   
   /**
-    @brief Add ENetSocket client to a ENetSelector for automation.
-    @details Add the ENetSocket client to a running ENetSelector with room.
-    @details Automatically create a new ENetSelector and run it if needed.
-    @param p_client ENetSocket of a newly connected client.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_NET_SOCKET_INVALID is p_client is null.
-    @eerror EERROR_NET_SERVER_ADD if p_client couldn't be add or a newly created ENetSelector couldn't be start.
+    @brief Add ENetSocket client to ENetSelector automation. /!\ Mutex. /!\ EError.
+    @details Call ENetServer::clearSelectors() at start.
+    @details Call ENetSelector::addClient() on each ENetSelector untill a success.
+    @details Create a new ENetSelector if addition failed with no error.
+    @details Discard ENetSocket client in case of EError.
+    @param p_client ENetSocket client.
   */
   void                  ENetServer::addClient(ENetSocket *p_client)
   {
-    bool                l_added = false;
-
     mEERROR_R();
     if (nullptr == p_client)
     {
-      mEERROR_S(EERROR_NET_SOCKET_INVALID);
+      mEERROR_S(EERROR_NULL_PTR);
     }
 
     if (EERROR_NONE == mEERROR)
     {
+      bool              l_stop = false;
+
       WaitForSingleObject(m_mutexSelectors, INFINITE);
       clearSelectors();
-      for (std::vector<ENetSelector*>::iterator l_it = m_selectors.begin(); l_it != m_selectors.end(); ++l_it)
+      for (std::vector<ENetSelector*>::iterator l_selector = m_selectors.begin(); l_selector != m_selectors.end(); ++l_selector)
       {
-        if (false == l_added)
+        if (false == l_stop)
         {
-          l_added = (*l_it)->addClient(p_client);
+          l_stop = (*l_selector)->addClient(p_client);
           if (EERROR_NONE != mEERROR)
           {
-            mEERROR_SA(EERROR_NET_SERVER_ADD, mEERROR_G.toString());
+            mEERROR_SH(EERROR_NET_SELECTOR_ERR);
+            l_stop = true;
           }
         }
       }
       ReleaseMutex(m_mutexSelectors);
       if ((EERROR_NONE == mEERROR)
-        && (false == l_added))
+        && (false == l_stop))
       {
         ENetSelector    *l_selector = nullptr;
 
-        l_selector = new ENetSelector(m_packetHandler, p_client);
+        l_selector = new ENetSelector();
         if (nullptr != l_selector)
         {
-          l_selector->start();
+          l_selector->addClient(p_client);
           if (EERROR_NONE == mEERROR)
           {
-            WaitForSingleObject(m_mutexSelectors, INFINITE);
-            m_selectors.push_back(l_selector);
-            ReleaseMutex(m_mutexSelectors);
-            l_added = true;
+            l_selector->start();
+            if (EERROR_NONE == mEERROR)
+            {
+              WaitForSingleObject(m_mutexSelectors, INFINITE);
+              m_selectors.push_back(l_selector);
+              ReleaseMutex(m_mutexSelectors);
+            }
+            else
+            {
+              mEERROR_SH(EERROR_NET_SELECTOR_ERR);
+              delete (l_selector);
+            }
           }
           else
           {
+            mEERROR_SH(EERROR_NET_SELECTOR_ERR);
             delete (l_selector);
-            mEERROR_SA(EERROR_NET_SERVER_ADD, mEERROR_G.toString());
           }
         }
         else
         {
-          mEERROR_S(EERROR_OOM);
+          mEERROR_S(EERROR_MEMORY);
         }
       }
     }
   }
 
   /**
-    @brief Send ENetPacket to every ENetSocket connected to the ENetServer.
-    @details Use ENetSelector broadcast command to send the ENetPacket.
-    @details EErrors during sends are ignored.
+    @brief Send ENetPacket to every ENetServer clients. /!\ Mutex. /!\ EError.
+    @details Call ENetSelector::broadcast() on each ENetSelector.
     @param p_packet ENetPacket to be send.
-    @eerror EERROR_NONE in success.
-    @eerror EERROR_NULL_PTR is p_packet is null.
   */
   void                  ENetServer::broadcast(ENetPacket *p_packet)
   {
@@ -298,22 +459,25 @@ namespace               ELib
       for (std::vector<ENetSelector*>::iterator l_it = m_selectors.begin(); l_it != m_selectors.end(); ++l_it)
       {
         (*l_it)->broadcast(p_packet);
+        if (EERROR_NONE == mEERROR)
+        {
+          mEERROR_SH(EERROR_NET_SELECTOR_ERR);
+        }
       }
       ReleaseMutex(m_mutexSelectors);
     }
   }
 
   /**
-    @brief Clear the ENetSelector list unused.
-    @details Delete every ENetSelectors that are empty and not running.
+    @brief Clear the ENetSelector list unused. /!\ Mutex.
+    @details Delete every ENetSelectors that are empty.
   */
   void                  ENetServer::clearSelectors()
   {
     WaitForSingleObject(m_mutexSelectors, INFINITE);
     for (std::vector<ENetSelector*>::iterator l_it = m_selectors.begin(); l_it != m_selectors.end(); )
     {
-      if ((true == (*l_it)->isEmpty())
-        && (false == (*l_it)->isRunning()))
+      if (0 == (*l_it)->getSize())
       {
         delete (*l_it);
         l_it = m_selectors.erase(l_it);
@@ -327,17 +491,8 @@ namespace               ELib
   }
 
   /**
-    @brief Get the ENetPacketHandler of the ENetServer.
-    @return Reference to the ENetPacketHandler of the ENetServer.
-  */
-  ENetPacketHandler     &ENetServer::getPacketHandler()
-  {
-    return (m_packetHandler);
-  }
-
-  /**
-    @brief Determine if the ENetServer is running.
-    @return bool indicating if the ENetServer is running.
+    @brief Get state of ENetServer.
+    @return State.
   */
   bool                  ENetServer::isRunning() const
   {
@@ -345,19 +500,20 @@ namespace               ELib
   }
 
   /**
-    @brief Retreive the ENetServer informations as string.
-    @return String containing informations of ENetServer.
+    @brief Get ENetServer informations as string. /!\ Mutex.
+    @return Informations of ENetServer.
   */
   const std::string     ENetServer::toString() const
   {
     std::string         l_str;
 
     l_str = "ENetServer ";
-    l_str += isRunning() ? "running\n" : "stopped\n";
+    l_str += isRunning() ? "running " : "stopped ";
+    l_str += "(" + std::to_string(m_selectors.size()) + " selectors).\n";
     WaitForSingleObject(m_mutexSelectors, INFINITE);
     for (std::vector<ENetSelector*>::const_iterator l_it = m_selectors.begin(); l_it != m_selectors.end(); ++l_it)
     {
-      l_str += "  " + (*l_it)->toString() + "\n";
+      l_str += "  " + (*l_it)->toString() + ".\n";
     }
     ReleaseMutex(m_mutexSelectors);
 
